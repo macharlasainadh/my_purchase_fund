@@ -152,8 +152,20 @@ export const usePurchaseStore = create<PurchaseState & PurchaseActions>()(
         const summary = selectFundSummary(state);
         const minRequired = summary.totalCommittedPaise;
         const validAmount = Math.max(minRequired, amountPaise);
+        const deltaPaise = validAmount - state.totalFundPaise;
+        if (deltaPaise === 0) return;
+        const direction = deltaPaise > 0 ? 'increased' : 'decreased';
+        const tx: Transaction = {
+          id: generateId(),
+          date: new Date().toISOString(),
+          type: 'fund_adjustment',
+          amountPaise: Math.abs(deltaPaise),
+          fundDeltaPaise: deltaPaise,
+          description: `Fund total ${direction} by ₹${(Math.abs(deltaPaise) / 100).toLocaleString('en-IN')}`,
+        };
         set({
           totalFundPaise: validAmount,
+          transactions: [tx, ...state.transactions],
           toastMessage: `Total fund updated to ₹${(validAmount / 100).toLocaleString('en-IN')}`,
           toastType: 'success',
         });

@@ -19,7 +19,8 @@ export type TransactionType =
   | 'mark_purchased'
   | 'remove_product'
   | 'goal_contribute'
-  | 'goal_withdraw';
+  | 'goal_withdraw'
+  | 'fund_adjustment';
 
 export type GoalCategory =
   | 'purchase'
@@ -112,6 +113,8 @@ export interface Transaction {
   type: TransactionType;
   /** Primary amount involved, in paise */
   amountPaise: number;
+  /** Signed change to the fund total for fund_adjustment transactions. */
+  fundDeltaPaise?: number;
   method?: AllocationMethod;
   allocations?: AllocationEntry[];
   fromProductId?: string;

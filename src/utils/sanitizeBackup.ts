@@ -3,12 +3,11 @@ import { generateId, getFundingStatus } from './allocation';
 import { normalizeUrl } from './url';
 
 const VALID_PRIORITIES = new Set<Priority>(['low', 'medium', 'high', 'critical']);
-const VALID_PRODUCT_STATUSES = new Set<ProductStatus>(['wishlist', 'saving', 'fully_funded', 'purchased']);
 const VALID_GOAL_CATEGORIES = new Set<GoalCategory>([
   'purchase', 'investment', 'travel', 'emergency', 'education', 'retirement', 'home', 'health', 'other'
 ]);
 const VALID_TRANSACTION_TYPES = new Set<TransactionType>([
-  'add_money', 'move_money', 'redistribute', 'price_change', 'mark_purchased', 'remove_product', 'goal_contribute', 'goal_withdraw'
+  'add_money', 'move_money', 'redistribute', 'price_change', 'mark_purchased', 'remove_product', 'goal_contribute', 'goal_withdraw', 'fund_adjustment'
 ]);
 
 function deriveSafeStatus(allocated: number, price: number): ProductStatus {
@@ -26,6 +25,13 @@ export interface SanitizedBackup {
   transactions: Transaction[];
 }
 
+function readPaise(value: unknown, field: string): number {
+  if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 0) {
+    throw new Error(`Invalid backup file: ${field} must be a nonnegative whole number of paise.`);
+  }
+  return value;
+}
+
 /**
  * Validates and sanitizes imported backup data.
  * Defensively ensures arrays and properties exist so that legacy or partial
@@ -39,26 +45,31 @@ export function sanitizeBackupData(raw: any): SanitizedBackup {
   // Handle Zustand persistence envelope (e.g. raw localStorage backup from ErrorBoundary)
   const source = (raw.state && typeof raw.state === 'object') ? raw.state : raw;
 
+  const requiredArrays = ['products', 'purchasedProducts', 'goals', 'transactions'] as const;
+  if (
+    typeof source.totalFundPaise !== 'number' ||
+    !Number.isSafeInteger(source.totalFundPaise) ||
+    source.totalFundPaise < 0 ||
+    requiredArrays.some((key) =>
+      !Array.isArray(source[key]) ||
+      source[key].some((record: unknown) => !record || typeof record !== 'object' || Array.isArray(record))
+    )
+  ) {
+    throw new Error('Invalid backup file: expected a complete backup with a valid fund total and data lists.');
+  }
+
   // 1. Total fund
-  const totalFundPaise = typeof source.totalFundPaise === 'number' && !isNaN(source.totalFundPaise) && source.totalFundPaise >= 0
-    ? Math.round(source.totalFundPaise)
-    : 0;
+  const totalFundPaise = readPaise(source.totalFundPaise, 'Total fund');
 
   // 2. Products
   const rawProducts = Array.isArray(source.products) ? source.products : [];
   const products: Product[] = rawProducts
     .filter((p: any) => p && typeof p === 'object')
     .map((p: any): Product => {
-      const pricePaise = typeof p.pricePaise === 'number' && !isNaN(p.pricePaise) && p.pricePaise >= 0
-        ? Math.round(p.pricePaise)
-        : 0;
-      const allocatedPaise = typeof p.allocatedPaise === 'number' && !isNaN(p.allocatedPaise) && p.allocatedPaise >= 0
-        ? Math.round(p.allocatedPaise)
-        : 0;
+      const pricePaise = readPaise(p.pricePaise, `Product "${p.name ?? 'Unnamed'}" price`);
+      const allocatedPaise = readPaise(p.allocatedPaise, `Product "${p.name ?? 'Unnamed'}" allocation`);
       const priority: Priority = VALID_PRIORITIES.has(p.priority) ? p.priority : 'medium';
-      const status: ProductStatus = VALID_PRODUCT_STATUSES.has(p.status)
-        ? p.status
-        : deriveSafeStatus(allocatedPaise, pricePaise);
+      const status: ProductStatus = deriveSafeStatus(allocatedPaise, pricePaise);
 
       const rawLinks = Array.isArray(p.links) ? p.links : [];
       const links = rawLinks
@@ -91,18 +102,14 @@ export function sanitizeBackupData(raw: any): SanitizedBackup {
   const purchasedProducts: PurchasedProduct[] = rawPurchased
     .filter((p: any) => p && typeof p === 'object')
     .map((p: any): PurchasedProduct => {
-      const originalPricePaise = typeof p.originalPricePaise === 'number' && !isNaN(p.originalPricePaise) && p.originalPricePaise >= 0
-        ? Math.round(p.originalPricePaise)
-        : 0;
-      const allocatedPaise = typeof p.allocatedPaise === 'number' && !isNaN(p.allocatedPaise) && p.allocatedPaise >= 0
-        ? Math.round(p.allocatedPaise)
-        : 0;
-      const finalPricePaise = typeof p.finalPricePaise === 'number' && !isNaN(p.finalPricePaise) && p.finalPricePaise >= 0
-        ? Math.round(p.finalPricePaise)
-        : originalPricePaise;
-      const deductedFundPaise = typeof p.deductedFundPaise === 'number' && !isNaN(p.deductedFundPaise) && p.deductedFundPaise >= 0
-        ? Math.round(p.deductedFundPaise)
-        : undefined;
+      const originalPricePaise = readPaise(p.originalPricePaise, `Purchased product "${p.name ?? 'Unnamed'}" original price`);
+      const allocatedPaise = readPaise(p.allocatedPaise, `Purchased product "${p.name ?? 'Unnamed'}" allocation`);
+      const finalPricePaise = p.finalPricePaise === undefined
+        ? originalPricePaise
+        : readPaise(p.finalPricePaise, `Purchased product "${p.name ?? 'Unnamed'}" final price`);
+      const deductedFundPaise = p.deductedFundPaise === undefined
+        ? undefined
+        : readPaise(p.deductedFundPaise, `Purchased product "${p.name ?? 'Unnamed'}" deducted fund`);
       const priority: Priority = VALID_PRIORITIES.has(p.priority) ? p.priority : 'medium';
 
       const rawLinks = Array.isArray(p.links) ? p.links : [];
@@ -138,12 +145,8 @@ export function sanitizeBackupData(raw: any): SanitizedBackup {
   const goals: Goal[] = rawGoals
     .filter((g: any) => g && typeof g === 'object')
     .map((g: any): Goal => {
-      const targetAmountPaise = typeof g.targetAmountPaise === 'number' && !isNaN(g.targetAmountPaise) && g.targetAmountPaise >= 0
-        ? Math.round(g.targetAmountPaise)
-        : 0;
-      const savedAmountPaise = typeof g.savedAmountPaise === 'number' && !isNaN(g.savedAmountPaise) && g.savedAmountPaise >= 0
-        ? Math.round(g.savedAmountPaise)
-        : 0;
+      const targetAmountPaise = readPaise(g.targetAmountPaise, `Goal "${g.name ?? 'Unnamed'}" target`);
+      const savedAmountPaise = readPaise(g.savedAmountPaise, `Goal "${g.name ?? 'Unnamed'}" savings`);
       const category: GoalCategory = VALID_GOAL_CATEGORIES.has(g.category) ? g.category : 'purchase';
       const priority: Priority = VALID_PRIORITIES.has(g.priority) ? g.priority : 'medium';
       const color = typeof g.color === 'string' && g.color.trim() ? g.color.trim() : '#6366f1';
@@ -156,9 +159,9 @@ export function sanitizeBackupData(raw: any): SanitizedBackup {
         category,
         targetAmountPaise,
         savedAmountPaise,
-        monthlyContributionPaise: typeof g.monthlyContributionPaise === 'number' && !isNaN(g.monthlyContributionPaise) && g.monthlyContributionPaise > 0
-          ? Math.round(g.monthlyContributionPaise)
-          : undefined,
+        monthlyContributionPaise: g.monthlyContributionPaise === undefined
+          ? undefined
+          : readPaise(g.monthlyContributionPaise, `Goal "${g.name ?? 'Unnamed'}" monthly contribution`),
         targetDate: typeof g.targetDate === 'string' && g.targetDate.trim() ? g.targetDate.trim() : undefined,
         priority,
         color,
@@ -175,15 +178,24 @@ export function sanitizeBackupData(raw: any): SanitizedBackup {
     .filter((t: any) => t && typeof t === 'object')
     .map((t: any): Transaction => {
       const type: TransactionType = VALID_TRANSACTION_TYPES.has(t.type) ? t.type : 'add_money';
-      const amountPaise = typeof t.amountPaise === 'number' && !isNaN(t.amountPaise) && t.amountPaise >= 0
-        ? Math.round(t.amountPaise)
-        : 0;
+      const amountPaise = readPaise(t.amountPaise, `Transaction "${t.description ?? 'Transaction'}" amount`);
+      let fundDeltaPaise: number | undefined;
+      if (t.fundDeltaPaise !== undefined) {
+        if (typeof t.fundDeltaPaise !== 'number' || !Number.isSafeInteger(t.fundDeltaPaise)) {
+          throw new Error('Invalid backup file: fund adjustment must be a signed whole number of paise.');
+        }
+        fundDeltaPaise = t.fundDeltaPaise;
+      }
+      if (type === 'fund_adjustment' && (fundDeltaPaise === undefined || Math.abs(fundDeltaPaise) !== amountPaise)) {
+        throw new Error('Invalid backup file: fund adjustment amount does not match its recorded direction.');
+      }
 
       return {
         id: typeof t.id === 'string' && t.id ? t.id : generateId(),
         date: typeof t.date === 'string' && t.date.trim() ? t.date.trim() : new Date().toISOString(),
         type,
         amountPaise,
+        fundDeltaPaise,
         method: t.method,
         allocations: Array.isArray(t.allocations) ? t.allocations : undefined,
         fromProductId: typeof t.fromProductId === 'string' ? t.fromProductId : undefined,
@@ -194,6 +206,12 @@ export function sanitizeBackupData(raw: any): SanitizedBackup {
         description: typeof t.description === 'string' && t.description.trim() ? t.description.trim() : 'Transaction',
       };
     });
+
+  const committedPaise = products.reduce((sum, p) => sum + p.allocatedPaise, 0)
+    + goals.reduce((sum, g) => sum + g.savedAmountPaise, 0);
+  if (!Number.isSafeInteger(committedPaise) || committedPaise > totalFundPaise) {
+    throw new Error('Invalid backup file: allocated product and goal savings exceed the total fund. Your current data was not changed.');
+  }
 
   return {
     totalFundPaise,
