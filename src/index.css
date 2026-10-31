@@ -130,6 +130,16 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 0 0 0 2px #818cf850;
 }
 
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid #6366f1;
+  outline-offset: 2px;
+}
+
 /* Tab fade-in animation */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(3px); }

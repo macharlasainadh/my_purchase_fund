@@ -54,8 +54,10 @@ export function LandingNav({ onOpenApp }: LandingNavProps) {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         {/* Brand */}
-        <div
-          className="flex items-center gap-2.5 cursor-pointer"
+        <button
+          type="button"
+          aria-label="My Purchase Fund, back to top"
+          className="flex items-center gap-2.5 cursor-pointer text-left"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         >
           <div className="w-9 h-9 rounded-xl bg-indigo-500 flex items-center justify-center flex-shrink-0 shadow-md shadow-indigo-500/25">
@@ -69,7 +71,7 @@ export function LandingNav({ onOpenApp }: LandingNavProps) {
               Personal purchase planner
             </span>
           </div>
-        </div>
+        </button>
 
         {/* Desktop Links */}
         <nav className="hidden md:flex items-center gap-7">

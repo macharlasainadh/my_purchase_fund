@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { isToday, isYesterday } from 'date-fns';
 import { formatDateSafe, parseISOSafe } from '../../utils/date';
 import {
-  ArrowRight, Plus, RefreshCw, ShoppingCart, Trash2, Tag,
+  ArrowRight, Plus, RefreshCw, ShoppingCart, Trash2, Tag, Wallet,
   Target, ArrowDownLeft, Search, Filter, X
 } from 'lucide-react';
 import { usePurchaseStore } from '../../store/usePurchaseStore';
@@ -19,6 +19,7 @@ const TX_ICONS: Record<string, React.ReactNode> = {
   remove_product: <Trash2 size={14} />,
   goal_contribute: <Target size={14} />,
   goal_withdraw: <ArrowDownLeft size={14} />,
+  fund_adjustment: <Wallet size={14} />,
 };
 
 const TX_COLORS: Record<string, string> = {
@@ -30,6 +31,7 @@ const TX_COLORS: Record<string, string> = {
   remove_product: '#ef4444',
   goal_contribute: '#10b981',
   goal_withdraw: '#f43f5e',
+  fund_adjustment: '#6366f1',
 };
 
 const TX_TYPE_LABELS: Record<TransactionType, string> = {
@@ -41,6 +43,7 @@ const TX_TYPE_LABELS: Record<TransactionType, string> = {
   remove_product: 'Removed Product',
   goal_contribute: 'Goal Contribution',
   goal_withdraw: 'Goal Withdrawal',
+  fund_adjustment: 'Fund Adjustment',
 };
 
 function TxCard({ tx }: { tx: Transaction }) {
@@ -53,8 +56,18 @@ function TxCard({ tx }: { tx: Transaction }) {
       style={{ border: '1px solid var(--border)', backgroundColor: 'var(--surface)' }}
     >
       <div
+        role="button"
+        tabIndex={0}
+        aria-expanded={expanded}
+        aria-label={`${tx.description}; transaction details ${expanded ? 'expanded' : 'collapsed'}`}
         className="flex items-start gap-3 p-4 cursor-pointer"
         onClick={() => setExpanded(!expanded)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            setExpanded((value) => !value);
+          }
+        }}
       >
         <div
           className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
@@ -90,6 +103,11 @@ function TxCard({ tx }: { tx: Transaction }) {
           )}
           {tx.type === 'goal_withdraw' && (
             <span className="text-sm font-bold text-rose-500">-{formatCurrency(tx.amountPaise)}</span>
+          )}
+          {tx.type === 'fund_adjustment' && (
+            <span className="text-sm font-bold" style={{ color }}>
+              {tx.fundDeltaPaise !== undefined && tx.fundDeltaPaise > 0 ? '+' : tx.fundDeltaPaise !== undefined && tx.fundDeltaPaise < 0 ? '−' : ''}{formatCurrency(tx.amountPaise)}
+            </span>
           )}
           {(tx.type === 'redistribute' || tx.type === 'remove_product' || tx.type === 'price_change') && tx.amountPaise > 0 && (
             <span className="text-sm font-semibold" style={{ color: 'var(--text-muted)' }}>
@@ -215,6 +233,7 @@ export function TransactionHistory() {
           <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
           <input
             type="text"
+            aria-label="Search transactions"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by description, product, or note..."
@@ -240,6 +259,7 @@ export function TransactionHistory() {
           {/* Transaction Type Filter */}
           <div className="relative flex-1 sm:flex-initial">
             <select
+              aria-label="Filter transactions by type"
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
               className="w-full sm:w-auto h-11 min-h-[44px] sm:h-auto px-3 sm:py-2.5 rounded-xl text-sm font-medium outline-none transition-colors cursor-pointer"
@@ -258,6 +278,7 @@ export function TransactionHistory() {
 
           {/* Sort Order */}
           <select
+            aria-label="Sort transactions"
             value={sortOrder}
             onChange={(e) => setSortOrder(e.target.value as 'newest' | 'oldest')}
             className="flex-1 sm:flex-initial h-11 min-h-[44px] sm:h-auto px-3 sm:py-2.5 rounded-xl text-sm font-medium outline-none transition-colors cursor-pointer"

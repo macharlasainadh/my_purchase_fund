@@ -22,14 +22,14 @@ export function LandingFooter({ onOpenApp }: LandingFooterProps) {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
           {/* Brand Col */}
           <div className="md:col-span-2 flex flex-col gap-3">
-            <div className="flex items-center gap-2.5 cursor-pointer" onClick={scrollToTop}>
+            <button type="button" aria-label="My Purchase Fund, back to top" className="flex items-center gap-2.5 cursor-pointer text-left" onClick={scrollToTop}>
               <div className="w-8 h-8 rounded-xl bg-indigo-500 flex items-center justify-center text-white shadow-sm">
                 <Wallet size={16} />
               </div>
               <span className="text-base font-bold" style={{ color: 'var(--text)' }}>
                 My Purchase Fund
               </span>
-            </div>
+            </button>
             <p className="text-xs sm:text-sm leading-relaxed max-w-sm" style={{ color: 'var(--text-muted)' }}>
               Organize what you want to buy, decide where your money goes, and track your progress until you're ready to purchase.
             </p>

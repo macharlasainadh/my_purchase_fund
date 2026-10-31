@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useId, useRef } from 'react';
 import { X, ArrowLeft } from 'lucide-react';
 
 interface ModalProps {
@@ -28,6 +28,9 @@ export function Modal({
   isConfirmation = false,
 }: ModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
+  const desktopDialogRef = useRef<HTMLDivElement>(null);
+  const mobileDialogRef = useRef<HTMLDivElement>(null);
+  const dialogId = useId();
 
   useEffect(() => {
     if (isOpen) {
@@ -41,11 +44,56 @@ export function Modal({
   }, [isOpen]);
 
   useEffect(() => {
+    if (!isOpen) return;
+
+    const previouslyFocused = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+    const getActiveDialog = () => [desktopDialogRef.current, mobileDialogRef.current]
+      .find((dialog) => dialog && dialog.getClientRects().length > 0) ?? null;
+    const getFocusableElements = (dialog: HTMLElement) => Array.from(
+      dialog.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )
+    ).filter((element) => element.getClientRects().length > 0);
+
+    const dialog = getActiveDialog();
+    const focusable = dialog ? getFocusableElements(dialog) : [];
+    if (dialog && !dialog.contains(document.activeElement)) {
+      (focusable[0] ?? dialog).focus();
+    }
+
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') {
+        onClose();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+
+      const activeDialog = getActiveDialog();
+      if (!activeDialog) return;
+      const items = getFocusableElements(activeDialog);
+      if (items.length === 0) {
+        e.preventDefault();
+        activeDialog.focus();
+        return;
+      }
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (e.shiftKey && (document.activeElement === first || !activeDialog.contains(document.activeElement))) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && (document.activeElement === last || !activeDialog.contains(document.activeElement))) {
+        e.preventDefault();
+        first.focus();
+      }
     };
-    if (isOpen) document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
+
+    document.addEventListener('keydown', handler);
+    return () => {
+      document.removeEventListener('keydown', handler);
+      if (previouslyFocused?.isConnected) previouslyFocused.focus();
+    };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
@@ -73,6 +121,11 @@ export function Modal({
         }}
       >
         <div
+          ref={desktopDialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={`${dialogId}-title`}
+          tabIndex={-1}
           className={`relative w-full ${sizeClasses[size]} max-h-[90vh] flex flex-col rounded-2xl shadow-2xl overflow-hidden`}
           style={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)' }}
         >
@@ -81,11 +134,12 @@ export function Modal({
             className="flex items-center justify-between px-5 sm:px-6 py-3.5 sm:py-4 border-b"
             style={{ borderColor: 'var(--border)' }}
           >
-            <h2 className="text-base sm:text-lg font-semibold" style={{ color: 'var(--text)' }}>
+            <h2 id={`${dialogId}-title`} className="text-base sm:text-lg font-semibold" style={{ color: 'var(--text)' }}>
               {title}
             </h2>
             <button
               onClick={onClose}
+              aria-label="Close dialog"
               className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer"
               style={{ color: 'var(--text-muted)' }}
             >
@@ -116,6 +170,11 @@ export function Modal({
          ══════════════════════════════════════════════════════════════════ */}
       {!isCompactConfirm && (
         <div
+          ref={mobileDialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={`${dialogId}-mobile-title`}
+          tabIndex={-1}
           className="sm:hidden fixed inset-0 z-50 flex flex-col h-[100dvh] overflow-hidden animate-in fade-in duration-150"
           style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}
         >
@@ -134,7 +193,7 @@ export function Modal({
               <span>Back</span>
             </button>
 
-            <h1 className="text-base font-bold truncate text-center flex-1 mx-2" style={{ color: 'var(--text)' }}>
+            <h1 id={`${dialogId}-mobile-title`} className="text-base font-bold truncate text-center flex-1 mx-2" style={{ color: 'var(--text)' }}>
               {title.replace(/^[\p{Emoji}\u2000-\u3300]\s*/u, '')}
             </h1>
 

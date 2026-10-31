@@ -149,7 +149,7 @@ export function GoalFormModal() {
         {/* Name */}
         <div>
           <label className="text-sm font-medium block mb-1" style={labelStyle}>Goal Name *</label>
-          <input value={form.name} onChange={f('name')} placeholder="e.g. Emergency Fund, Europe Trip…"
+          <input aria-label="Goal name" value={form.name} onChange={f('name')} placeholder="e.g. Emergency Fund, Europe Trip…"
             className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle} />
           {errors.name && <p style={errorStyle}>{errors.name}</p>}
         </div>
@@ -158,7 +158,7 @@ export function GoalFormModal() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <div>
             <label className="text-sm font-medium block mb-1" style={labelStyle}>Category</label>
-            <select value={form.category} onChange={f('category')}
+            <select aria-label="Goal category" value={form.category} onChange={f('category')}
               className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle}>
               {GOAL_CATEGORIES.map((c) => (
                 <option key={c.value} value={c.value}>{c.emoji} {c.label}</option>
@@ -169,7 +169,7 @@ export function GoalFormModal() {
             <label className="text-sm font-medium block mb-1" style={labelStyle}>Priority</label>
             <div className="flex gap-1.5">
               {PRIORITIES.map((p) => (
-                <button key={p.value} onClick={() => setForm({ ...form, priority: p.value })}
+                <button key={p.value} type="button" aria-pressed={form.priority === p.value} onClick={() => setForm({ ...form, priority: p.value })}
                   className="flex-1 py-2 rounded-lg text-xs font-medium transition-colors"
                   style={{
                     backgroundColor: form.priority === p.value ? form.color : 'var(--surface-2)',
@@ -189,7 +189,7 @@ export function GoalFormModal() {
             <label className="text-sm font-medium block mb-1" style={labelStyle}>Target Amount (₹) *</label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold" style={{ color: 'var(--text-muted)' }}>₹</span>
-              <input type="number" value={form.targetAmount} onChange={f('targetAmount')}
+              <input type="number" aria-label="Goal target amount in rupees" value={form.targetAmount} onChange={f('targetAmount')}
                 placeholder="0" min="0" step="0.01"
                 className="w-full pl-8 pr-3 py-2.5 rounded-xl text-sm font-bold outline-none" style={inputStyle} />
             </div>
@@ -199,7 +199,7 @@ export function GoalFormModal() {
             <label className="text-sm font-medium block mb-1" style={labelStyle}>Monthly Plan (₹)</label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold" style={{ color: 'var(--text-muted)' }}>₹</span>
-              <input type="number" value={form.monthlyContribution} onChange={f('monthlyContribution')}
+              <input type="number" aria-label="Monthly contribution in rupees" value={form.monthlyContribution} onChange={f('monthlyContribution')}
                 placeholder="Optional" min="0" step="0.01"
                 className="w-full pl-8 pr-3 py-2.5 rounded-xl text-sm font-bold outline-none" style={inputStyle} />
             </div>
@@ -210,12 +210,12 @@ export function GoalFormModal() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <div>
             <label className="text-sm font-medium block mb-1" style={labelStyle}>Target Date</label>
-            <input type="date" value={form.targetDate} onChange={f('targetDate')}
+            <input type="date" aria-label="Goal target date" value={form.targetDate} onChange={f('targetDate')}
               className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle} />
           </div>
           <div>
             <label className="text-sm font-medium block mb-1" style={labelStyle}>Short Description</label>
-            <input value={form.description} onChange={f('description')} placeholder="Optional tagline"
+            <input aria-label="Goal short description" value={form.description} onChange={f('description')} placeholder="Optional tagline"
               className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle} />
           </div>
         </div>
@@ -225,7 +225,7 @@ export function GoalFormModal() {
           <label className="text-sm font-medium block mb-2" style={labelStyle}>Card Color</label>
           <div className="flex gap-2 flex-wrap">
             {GOAL_COLORS.map((c) => (
-              <button key={c} onClick={() => setForm({ ...form, color: c })}
+              <button key={c} type="button" aria-label={`Choose color ${c}`} aria-pressed={form.color === c} onClick={() => setForm({ ...form, color: c })}
                 className="w-7 h-7 rounded-full transition-transform hover:scale-110"
                 style={{
                   backgroundColor: c,
@@ -240,7 +240,7 @@ export function GoalFormModal() {
         {/* Notes */}
         <div>
           <label className="text-sm font-medium block mb-1" style={labelStyle}>Notes</label>
-          <textarea value={form.notes} onChange={f('notes')} placeholder="Why this goal? Any context…"
+          <textarea aria-label="Goal notes" value={form.notes} onChange={f('notes')} placeholder="Why this goal? Any context…"
             rows={2} className="w-full px-3 py-2 rounded-xl text-sm outline-none resize-none" style={inputStyle} />
         </div>
       </div>

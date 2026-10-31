@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useId } from 'react';
 import { Plus, Trash2, ExternalLink } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { useModalStore } from '../../store/useModalStore';
@@ -155,13 +155,13 @@ export function ProductFormModal() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Category */}
           <Field label="Category">
-            <select value={category} onChange={(e) => setCategory(e.target.value)}
+            <select aria-label="Product category" value={category} onChange={(e) => setCategory(e.target.value)}
               className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle}>
               <option value="">Select category</option>
               {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
             {category === 'Other' && (
-              <input type="text" value={customCategory} onChange={(e) => setCustomCategory(e.target.value)}
+                <input type="text" aria-label="Custom product category" value={customCategory} onChange={(e) => setCustomCategory(e.target.value)}
                 placeholder="Enter category name" className="w-full mt-2 px-3 py-2 rounded-xl text-sm outline-none" style={inputStyle} />
             )}
           </Field>
@@ -170,7 +170,7 @@ export function ProductFormModal() {
           <Field label="Priority">
             <div className="flex gap-1.5 flex-wrap">
               {PRIORITIES.map((p) => (
-                <button key={p} onClick={() => setPriority(p)}
+                <button key={p} type="button" aria-pressed={priority === p} onClick={() => setPriority(p)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition-colors ${
                     priority === p ? 'text-white' : ''
                   }`}
@@ -190,7 +190,7 @@ export function ProductFormModal() {
           <Field label="Estimated Price (₹) *" error={errors.price}>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium" style={{ color: 'var(--text-muted)' }}>₹</span>
-              <input type="number" value={price} onChange={(e) => setPrice(e.target.value)}
+              <input type="number" aria-label="Estimated price in rupees" value={price} onChange={(e) => setPrice(e.target.value)}
                 placeholder="0" min="0" step="0.01"
                 className="w-full pl-8 pr-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle} />
             </div>
@@ -235,14 +235,14 @@ export function ProductFormModal() {
             {links.map((link, i) => (
               <div key={link.id} className="flex flex-col gap-1">
                 <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-                  <input type="text" value={link.label} onChange={(e) => updateLink(link.id, 'label', e.target.value)}
+                  <input type="text" aria-label={`Shopping link ${i + 1} label`} value={link.label} onChange={(e) => updateLink(link.id, 'label', e.target.value)}
                     placeholder="Label (e.g. Amazon)"
                     className="w-full sm:w-32 px-3 py-2 rounded-xl text-sm outline-none flex-shrink-0" style={inputStyle} />
                   <div className="flex gap-2 items-center flex-1">
-                    <input type="url" value={link.url} onChange={(e) => updateLink(link.id, 'url', e.target.value)}
+                    <input type="url" aria-label={`Shopping link ${i + 1} URL`} value={link.url} onChange={(e) => updateLink(link.id, 'url', e.target.value)}
                       placeholder="https://..."
                       className="flex-1 px-3 py-2 rounded-xl text-sm outline-none" style={inputStyle} />
-                    <button onClick={() => removeLink(link.id)}
+                    <button type="button" aria-label={`Remove shopping link ${i + 1}`} onClick={() => removeLink(link.id)}
                       className="p-2 rounded-lg text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors flex-shrink-0 cursor-pointer"
                       title="Remove link">
                       <Trash2 size={15} />
@@ -264,11 +264,21 @@ export function ProductFormModal() {
 }
 
 function Field({ label, children, error }: { label: string; children: React.ReactNode; error?: string }) {
+  const id = useId();
+  const isDirectControl = React.isValidElement(children)
+    && ['input', 'select', 'textarea'].includes(children.type as string);
+  const control = isDirectControl
+    ? React.cloneElement(children as React.ReactElement<Record<string, unknown>>, {
+      id,
+      'aria-describedby': error ? `${id}-error` : undefined,
+    })
+    : children;
+
   return (
     <div>
-      <label className="text-sm font-medium block mb-1.5" style={{ color: 'var(--text)' }}>{label}</label>
-      {children}
-      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+      <label htmlFor={isDirectControl ? id : undefined} className="text-sm font-medium block mb-1.5" style={{ color: 'var(--text)' }}>{label}</label>
+      {control}
+      {error && <p id={`${id}-error`} className="text-xs text-red-500 mt-1">{error}</p>}
     </div>
   );
 }

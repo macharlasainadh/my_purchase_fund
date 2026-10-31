@@ -115,6 +115,7 @@ export function ProductGrid() {
           <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
           <input
             type="text"
+            aria-label="Search products, categories, and notes"
             placeholder="Search products, categories, notes..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -145,6 +146,7 @@ export function ProductGrid() {
           <div>
             <label className="text-xs font-medium block mb-1" style={{ color: 'var(--text-muted)' }}>Sort by</label>
             <select
+              aria-label="Sort products by"
               value={sortKey}
               onChange={(e) => setSortKey(e.target.value as SortKey)}
               className="w-full text-sm rounded-lg px-2 py-1.5 outline-none"
@@ -162,6 +164,7 @@ export function ProductGrid() {
           <div>
             <label className="text-xs font-medium block mb-1" style={{ color: 'var(--text-muted)' }}>Direction</label>
             <select
+              aria-label="Product sort direction"
               value={sortDir}
               onChange={(e) => setSortDir(e.target.value as SortDir)}
               className="w-full text-sm rounded-lg px-2 py-1.5 outline-none"
@@ -174,6 +177,7 @@ export function ProductGrid() {
           <div>
             <label className="text-xs font-medium block mb-1" style={{ color: 'var(--text-muted)' }}>Category</label>
             <select
+              aria-label="Filter products by category"
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
               className="w-full text-sm rounded-lg px-2 py-1.5 outline-none"
@@ -186,6 +190,7 @@ export function ProductGrid() {
           <div>
             <label className="text-xs font-medium block mb-1" style={{ color: 'var(--text-muted)' }}>Funding Status</label>
             <select
+              aria-label="Filter products by funding status"
               value={filterFunding}
               onChange={(e) => setFilterFunding(e.target.value as FundingStatus | '')}
               className="w-full text-sm rounded-lg px-2 py-1.5 outline-none"
@@ -201,6 +206,7 @@ export function ProductGrid() {
           <div>
             <label className="text-xs font-medium block mb-1" style={{ color: 'var(--text-muted)' }}>Priority</label>
             <select
+              aria-label="Filter products by priority"
               value={filterPriority}
               onChange={(e) => setFilterPriority(e.target.value as Priority | '')}
               className="w-full text-sm rounded-lg px-2 py-1.5 outline-none"
