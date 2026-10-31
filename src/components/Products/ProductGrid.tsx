@@ -1,11 +1,12 @@
-import React, { useState, useMemo } from 'react';
+import React, { lazy, Suspense, useState, useMemo } from 'react';
 import { Search, SlidersHorizontal, Package, PlusCircle } from 'lucide-react';
 import { usePurchaseStore } from '../../store/usePurchaseStore';
 import { useModalStore } from '../../store/useModalStore';
 import { ProductCard } from './ProductCard';
-import { AllocationChart } from '../Dashboard/AllocationChart';
 import type { Product, Priority, FundingStatus } from '../../types';
 import { getFundingStatus, getFundingPercent } from '../../utils/allocation';
+
+const AllocationChart = lazy(() => import('../Dashboard/AllocationChart').then((module) => ({ default: module.AllocationChart })));
 
 type SortKey = 'name' | 'price' | 'funding_pct' | 'remaining' | 'priority' | 'target_date' | 'created_at';
 type SortDir = 'asc' | 'desc';
@@ -107,7 +108,9 @@ export function ProductGrid() {
   return (
     <div className="mt-6 flex flex-col gap-4">
       {/* Allocation Chart */}
-      <AllocationChart />
+      <Suspense fallback={<div className="h-48 rounded-2xl animate-pulse" role="status" aria-label="Loading allocation chart" style={{ backgroundColor: 'var(--surface-2)' }} />}>
+        <AllocationChart />
+      </Suspense>
 
       {/* Search and Controls */}
       <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3">
