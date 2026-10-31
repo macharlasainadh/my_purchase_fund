@@ -208,6 +208,9 @@ export function ProductFormModal() {
           <input type="url" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)}
             placeholder="https://..."
             className="w-full px-3 py-2.5 rounded-xl text-sm outline-none" style={inputStyle} />
+          <p className="mt-1 text-xs" style={{ color: 'var(--text-muted)' }}>
+            This image loads from its website, which can receive your network address. Leave blank to avoid that request.
+          </p>
           {imageUrl && (
             <div className="mt-2 h-20 rounded-lg overflow-hidden">
               <img src={imageUrl} alt="preview" className="w-full h-full object-cover"

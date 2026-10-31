@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import { persist, createJSONStorage, type StateStorage } from 'zustand/middleware';
 import type {
   PurchaseState,
   Product,
@@ -86,6 +86,30 @@ const initialState: PurchaseState = {
   transactions: [],
   darkMode: false,
   activeTab: 'products',
+};
+
+const resilientLocalStorage: StateStorage = {
+  getItem(name) {
+    try {
+      return localStorage.getItem(name);
+    } catch {
+      return null;
+    }
+  },
+  setItem(name, value) {
+    try {
+      localStorage.setItem(name, value);
+    } catch {
+      if (typeof window !== 'undefined') window.dispatchEvent(new Event('mpf-storage-write-failed'));
+    }
+  },
+  removeItem(name) {
+    try {
+      localStorage.removeItem(name);
+    } catch {
+      if (typeof window !== 'undefined') window.dispatchEvent(new Event('mpf-storage-write-failed'));
+    }
+  },
 };
 
 // Undo snapshot (NOT persisted — held in memory only)
@@ -671,7 +695,7 @@ export const usePurchaseStore = create<PurchaseState & PurchaseActions>()(
     }),
     {
       name: 'my-purchase-fund-v1',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => resilientLocalStorage),
       partialize: (state) => ({
         totalFundPaise: state.totalFundPaise,
         products: state.products,

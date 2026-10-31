@@ -44,6 +44,9 @@ export function PrivacySection() {
               <p className="text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>
                 Your data is stored locally in your browser. Export your data as a backup file and import it on another device whenever you want to continue your purchase plans.
               </p>
+              <p className="text-sm leading-relaxed mt-2" style={{ color: 'var(--text-muted)' }}>
+                Product images you add by URL are loaded from those image hosts. Those requests can reveal your network address to the host. Product links also open third-party websites when you choose them.
+              </p>
             </div>
 
             {/* Feature Chips Box */}
