@@ -46,11 +46,14 @@ function MoreMenu({
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+        className="flex h-11 w-11 shrink-0 items-center justify-center gap-1 rounded-xl p-0 text-sm font-medium transition-colors md:h-auto md:w-auto md:rounded-lg md:px-3 md:py-1.5"
         style={{ border: '1px solid var(--border)', color: 'var(--text)', backgroundColor: 'var(--surface)' }}
+        aria-label="More fund actions"
+        aria-expanded={open}
+        title="More fund actions"
       >
         <MoreHorizontal size={15} />
-        <span className="hidden sm:inline">More</span>
+        <span className="hidden md:inline">More</span>
         <ChevronDown size={12} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
@@ -348,18 +351,18 @@ export function DashboardHeader() {
           {activeTab === 'products' && (
             <>
               {/* Row 2: Action Buttons (Touch targets >= 44px) */}
-              <div className="flex items-center gap-2">
+              <div className="grid grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)_2.75rem] items-center gap-2">
                 <button
                   onClick={() => openAddMoney()}
-                  className="flex-1 h-11 px-4 rounded-xl text-sm font-semibold text-white bg-indigo-500 hover:bg-indigo-600 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm cursor-pointer"
+                  className="flex h-11 min-w-0 items-center justify-center gap-1.5 rounded-xl bg-indigo-500 px-2 text-xs font-semibold text-white shadow-sm transition-all hover:bg-indigo-600 active:scale-[0.98] sm:px-3 sm:text-sm"
                 >
                   <PlusCircle size={16} />
-                  <span>Add Money</span>
+                  <span className="whitespace-nowrap">Add Money</span>
                 </button>
 
                 <button
                   onClick={() => openProductForm()}
-                  className="h-11 px-2.5 sm:px-3.5 rounded-xl text-xs sm:text-sm font-medium transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer flex-shrink-0"
+                  className="flex h-11 min-w-0 items-center justify-center gap-1.5 rounded-xl px-2 text-xs font-medium transition-all active:scale-[0.98] sm:px-3 sm:text-sm"
                   style={{
                     border: '1.5px solid var(--border)',
                     color: 'var(--text)',
@@ -367,7 +370,7 @@ export function DashboardHeader() {
                   }}
                 >
                   <PlusCircle size={15} />
-                  <span>+ Add Product</span>
+                  <span className="whitespace-nowrap">Add Product</span>
                 </button>
 
                 <MoreMenu

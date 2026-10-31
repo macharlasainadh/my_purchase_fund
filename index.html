@@ -10,7 +10,7 @@
     <link rel="apple-touch-icon" href="/icon-192.png" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="PurchaseFund" />
+    <meta name="apple-mobile-web-app-title" content="Purchase Fund" />
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:title" content="My Purchase Fund — Plan, Allocate & Track Your Purchases" />
@@ -20,8 +20,66 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="My Purchase Fund — Plan, Allocate & Track Your Purchases" />
     <meta name="twitter:description" content="Organize what you want to buy, decide where your money goes, and track your progress until you're ready to purchase." />
+    <style>
+      #app-boot-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 24px;
+        background: #0f172a;
+        color: #f8fafc;
+        font: 700 20px/1.2 system-ui, sans-serif;
+        opacity: 1;
+        transition: opacity 260ms ease, visibility 260ms ease;
+      }
+      #app-boot-splash img {
+        width: 88px;
+        height: 88px;
+        border-radius: 22px;
+        animation: app-splash-mark 700ms cubic-bezier(.2,.8,.2,1) both;
+      }
+      #app-boot-splash span {
+        animation: app-splash-name 500ms 120ms ease-out both;
+      }
+      #app-boot-splash small {
+        color: #94a3b8;
+        font: 500 13px/1.3 system-ui, sans-serif;
+        animation: app-splash-name 500ms 200ms ease-out both;
+      }
+      #app-boot-splash[data-closing="true"] {
+        visibility: hidden;
+        opacity: 0;
+      }
+      @keyframes app-splash-mark {
+        from { opacity: 0; transform: scale(.86); }
+        to { opacity: 1; transform: scale(1); }
+      }
+      @keyframes app-splash-name {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @media (display-mode: standalone) {
+        #app-boot-splash { display: flex; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #app-boot-splash img,
+        #app-boot-splash span,
+        #app-boot-splash small { animation: none; }
+        #app-boot-splash { transition-duration: 1ms; }
+      }
+    </style>
   </head>
   <body>
+    <div id="app-boot-splash" aria-hidden="true">
+      <img src="/icon-512.png" alt="" />
+      <span>My Purchase Fund</span>
+      <small>Personal purchase planner</small>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

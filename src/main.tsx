@@ -11,3 +11,13 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </ErrorBoundary>
   </React.StrictMode>
 )
+
+const appBootSplash = document.getElementById('app-boot-splash');
+if (appBootSplash && window.matchMedia('(display-mode: standalone)').matches) {
+  window.setTimeout(() => {
+    appBootSplash.setAttribute('data-closing', 'true');
+    window.setTimeout(() => appBootSplash.remove(), 280);
+  }, 520);
+} else {
+  appBootSplash?.remove();
+}

@@ -15,7 +15,7 @@ export default defineConfig({
       includeAssets: ['icon-192.png', 'icon-512.png', 'favicon.svg'],
       manifest: {
         name: 'My Purchase Fund',
-        short_name: 'PurchaseFund',
+        short_name: 'Purchase Fund',
         description: 'Track, plan and save for the things you want to buy',
         theme_color: '#6366f1',
         background_color: '#0f172a',
