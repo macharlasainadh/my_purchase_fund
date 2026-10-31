@@ -9,6 +9,9 @@ const VALID_GOAL_CATEGORIES = new Set<GoalCategory>([
 const VALID_TRANSACTION_TYPES = new Set<TransactionType>([
   'add_money', 'move_money', 'redistribute', 'price_change', 'mark_purchased', 'remove_product', 'goal_contribute', 'goal_withdraw', 'fund_adjustment'
 ]);
+const VALID_ALLOCATION_METHODS = new Set(['unallocated', 'single', 'equal', 'percentage', 'custom']);
+
+export const CURRENT_BACKUP_VERSION = 1;
 
 function deriveSafeStatus(allocated: number, price: number): ProductStatus {
   const fs = getFundingStatus(allocated, price);
@@ -44,6 +47,10 @@ export function sanitizeBackupData(raw: any): SanitizedBackup {
 
   // Handle Zustand persistence envelope (e.g. raw localStorage backup from ErrorBoundary)
   const source = (raw.state && typeof raw.state === 'object') ? raw.state : raw;
+  const backupVersion = source._version ?? raw._version ?? CURRENT_BACKUP_VERSION;
+  if (!Number.isSafeInteger(backupVersion) || backupVersion < 1 || backupVersion > CURRENT_BACKUP_VERSION) {
+    throw new Error(`Unsupported backup version: ${String(backupVersion)}. This app supports backup version ${CURRENT_BACKUP_VERSION}.`);
+  }
 
   const requiredArrays = ['products', 'purchasedProducts', 'goals', 'transactions'] as const;
   if (
@@ -177,8 +184,14 @@ export function sanitizeBackupData(raw: any): SanitizedBackup {
   const transactions: Transaction[] = rawTx
     .filter((t: any) => t && typeof t === 'object')
     .map((t: any): Transaction => {
-      const type: TransactionType = VALID_TRANSACTION_TYPES.has(t.type) ? t.type : 'add_money';
+      if (!VALID_TRANSACTION_TYPES.has(t.type)) {
+        throw new Error('Invalid backup file: transaction type is not supported.');
+      }
+      const type: TransactionType = t.type;
       const amountPaise = readPaise(t.amountPaise, `Transaction "${t.description ?? 'Transaction'}" amount`);
+      const description = typeof t.description === 'string' && t.description.trim()
+        ? t.description.trim()
+        : 'Transaction';
       let fundDeltaPaise: number | undefined;
       if (t.fundDeltaPaise !== undefined) {
         if (typeof t.fundDeltaPaise !== 'number' || !Number.isSafeInteger(t.fundDeltaPaise)) {
@@ -190,6 +203,31 @@ export function sanitizeBackupData(raw: any): SanitizedBackup {
         throw new Error('Invalid backup file: fund adjustment amount does not match its recorded direction.');
       }
 
+      let allocations: Transaction['allocations'];
+      if (t.allocations !== undefined) {
+        if (!Array.isArray(t.allocations)) {
+          throw new Error('Invalid backup file: transaction allocations must be a list.');
+        }
+        allocations = t.allocations.map((allocation: any) => {
+          if (
+            !allocation || typeof allocation !== 'object' || Array.isArray(allocation) ||
+            typeof allocation.productId !== 'string' || !allocation.productId.trim() ||
+            typeof allocation.productName !== 'string' || !allocation.productName.trim()
+          ) {
+            throw new Error('Invalid backup file: each transaction allocation must include a product ID and name.');
+          }
+          return {
+            productId: allocation.productId,
+            productName: allocation.productName,
+            amountPaise: readPaise(allocation.amountPaise, 'Transaction allocation amount'),
+          };
+        });
+      }
+
+      if (t.method !== undefined && !VALID_ALLOCATION_METHODS.has(t.method)) {
+        throw new Error('Invalid backup file: transaction allocation method is not supported.');
+      }
+
       return {
         id: typeof t.id === 'string' && t.id ? t.id : generateId(),
         date: typeof t.date === 'string' && t.date.trim() ? t.date.trim() : new Date().toISOString(),
@@ -197,13 +235,13 @@ export function sanitizeBackupData(raw: any): SanitizedBackup {
         amountPaise,
         fundDeltaPaise,
         method: t.method,
-        allocations: Array.isArray(t.allocations) ? t.allocations : undefined,
+        allocations,
         fromProductId: typeof t.fromProductId === 'string' ? t.fromProductId : undefined,
         fromProductName: typeof t.fromProductName === 'string' ? t.fromProductName : undefined,
         toProductId: typeof t.toProductId === 'string' ? t.toProductId : undefined,
         toProductName: typeof t.toProductName === 'string' ? t.toProductName : undefined,
         notes: typeof t.notes === 'string' && t.notes.trim() ? t.notes.trim() : undefined,
-        description: typeof t.description === 'string' && t.description.trim() ? t.description.trim() : 'Transaction',
+        description,
       };
     });
 

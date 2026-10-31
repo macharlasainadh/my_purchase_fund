@@ -4,7 +4,7 @@ import { Modal } from '../ui/Modal';
 import { useModalStore } from '../../store/useModalStore';
 import { usePurchaseStore } from '../../store/usePurchaseStore';
 import { formatCurrency, paiseToRupees } from '../../utils/currency';
-import { sanitizeBackupData } from '../../utils/sanitizeBackup';
+import { CURRENT_BACKUP_VERSION, sanitizeBackupData } from '../../utils/sanitizeBackup';
 
 // ─── CSV helpers ──────────────────────────────────────────────────────────────
 
@@ -49,7 +49,7 @@ export function DataManagementModal() {
   // ── Export JSON ─────────────────────────────────────────────────────────────
   function handleExportJson() {
     const data = {
-      _version: 1,
+      _version: CURRENT_BACKUP_VERSION,
       _exportedAt: new Date().toISOString(),
       _appName: 'My Purchase Fund',
       totalFundPaise,
