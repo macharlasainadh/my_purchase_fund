@@ -29,46 +29,48 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 10px;
+        gap: 12px;
         padding: 24px;
         background: #0f172a;
         color: #f8fafc;
-        font: 700 20px/1.2 system-ui, sans-serif;
+        font: 700 22px/1.2 system-ui, sans-serif;
         opacity: 1;
         transition: opacity 260ms ease, visibility 260ms ease;
       }
-      #app-boot-splash img {
-        width: 88px;
-        height: 88px;
-        border-radius: 22px;
-        animation: app-splash-mark 700ms cubic-bezier(.2,.8,.2,1) both;
-      }
       #app-boot-splash span {
-        animation: app-splash-name 500ms 120ms ease-out both;
+        animation: app-splash-name 900ms 120ms cubic-bezier(.2,.8,.2,1) both;
+      }
+      #app-boot-splash i {
+        width: 42px;
+        height: 3px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #818cf8, #c4b5fd);
+        transform: scaleX(0);
+        animation: app-splash-rule 900ms 240ms cubic-bezier(.2,.8,.2,1) both;
       }
       #app-boot-splash small {
         color: #94a3b8;
         font: 500 13px/1.3 system-ui, sans-serif;
-        animation: app-splash-name 500ms 200ms ease-out both;
+        animation: app-splash-name 900ms 320ms cubic-bezier(.2,.8,.2,1) both;
       }
       #app-boot-splash[data-closing="true"] {
         visibility: hidden;
         opacity: 0;
       }
-      @keyframes app-splash-mark {
-        from { opacity: 0; transform: scale(.86); }
-        to { opacity: 1; transform: scale(1); }
-      }
       @keyframes app-splash-name {
-        from { opacity: 0; transform: translateY(6px); }
+        from { opacity: 0; transform: translateY(12px); }
         to { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes app-splash-rule {
+        from { transform: scaleX(0); }
+        to { transform: scaleX(1); }
       }
       @media (display-mode: standalone) {
         #app-boot-splash { display: flex; }
       }
       @media (prefers-reduced-motion: reduce) {
-        #app-boot-splash img,
         #app-boot-splash span,
+        #app-boot-splash i,
         #app-boot-splash small { animation: none; }
         #app-boot-splash { transition-duration: 1ms; }
       }
@@ -76,8 +78,8 @@
   </head>
   <body>
     <div id="app-boot-splash" aria-hidden="true">
-      <img src="/icon-512.png" alt="" />
       <span>My Purchase Fund</span>
+      <i></i>
       <small>Personal purchase planner</small>
     </div>
     <div id="root"></div>
