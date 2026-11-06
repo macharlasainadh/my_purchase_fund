@@ -51,7 +51,7 @@ export function DataManagementModal() {
     const data = {
       _version: CURRENT_BACKUP_VERSION,
       _exportedAt: new Date().toISOString(),
-      _appName: 'My Purchase Fund',
+      _appName: 'MITRA',
       totalFundPaise,
       products,
       purchasedProducts,
@@ -60,7 +60,7 @@ export function DataManagementModal() {
     };
     const json = JSON.stringify(data, null, 2);
     const date = new Date().toISOString().split('T')[0];
-    downloadFile(json, `my-purchase-fund-backup-${date}.json`, 'application/json');
+    downloadFile(json, `mitra-purchase-fund-backup-${date}.json`, 'application/json');
   }
 
   // ── Import JSON ─────────────────────────────────────────────────────────────

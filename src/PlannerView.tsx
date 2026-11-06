@@ -19,8 +19,8 @@ import { ConfirmDialog } from './components/ui/ConfirmDialog';
 import { UndoToast } from './components/ui/UndoToast';
 import { useModalStore } from './store/useModalStore';
 
-export default function PlannerView() {
-  const { darkMode, activeTab, setActiveTab } = usePurchaseStore();
+export default function PlannerView({ darkMode }: { darkMode: boolean }) {
+  const { activeTab, setActiveTab } = usePurchaseStore();
   const { confirmOpen, confirmTitle, confirmMessage, confirmOnConfirm, closeConfirm } = useModalStore();
 
   const mobileTabs = [
@@ -45,7 +45,7 @@ export default function PlannerView() {
 
       <nav
         aria-label="Planner sections"
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40 px-3 py-1.5 flex items-center justify-around border-t shadow-lg"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-40 px-3 py-1.5 flex items-center justify-around border-t shadow-lg"
         style={{ backgroundColor: 'var(--surface)', borderColor: 'var(--border)', backdropFilter: 'blur(16px)' }}
       >
         {mobileTabs.map(({ id, label, icon: Icon }) => {

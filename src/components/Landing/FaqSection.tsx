@@ -10,7 +10,7 @@ export function FaqSection() {
       a: 'Your data is stored locally in your browser on your device. No account or cloud database is required.',
     },
     {
-      q: 'Can I use My Purchase Fund on another device?',
+      q: 'Can I use MITRA on another device?',
       a: 'Yes. Export your data from your current device and import the backup on your new device to continue where you left off.',
     },
     {
@@ -27,7 +27,7 @@ export function FaqSection() {
     },
     {
       q: 'Do I need an account or subscription?',
-      a: 'No account, sign-up, or subscription is required. My Purchase Fund is completely free, runs locally in your browser, and requires zero external credentials.',
+      a: 'No account, sign-up, or subscription is required. MITRA runs locally in your browser and requires no external credentials.',
     },
   ];
 
@@ -43,7 +43,7 @@ export function FaqSection() {
             Frequently Asked Questions
           </h2>
           <p className="text-sm sm:text-base mt-2" style={{ color: 'var(--text-muted)' }}>
-            Everything you need to know about how My Purchase Fund works.
+            Everything you need to know about how MITRA works.
           </p>
         </div>
 

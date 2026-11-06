@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   PlusCircle, Package, ArrowRightLeft, RefreshCw, Equal,
-  Moon, Sun, Wallet, History, ShoppingBag, Target,
+  Wallet,
   ChevronDown, Pencil, Check, X as XIcon, MoreHorizontal,
   Database, Layers, ShoppingCart, AlertCircle, HardDrive,
 } from 'lucide-react';
@@ -293,20 +293,13 @@ function FundSummaryCards({ summary, onSaveFund }: {
 
 export function DashboardHeader() {
   const store = usePurchaseStore();
-  const { darkMode, setDarkMode, setActiveTab, activeTab, setTotalFund } = store;
+  const { activeTab, setTotalFund } = store;
   const { openAddMoney, openProductForm, openMoveMoney, openRedistribute, openEqualDistribute, openDataManagement } = useModalStore();
   const summary = selectFundSummary(store);
 
-  const tabs = [
-    { id: 'products'  as const, label: 'Products',  icon: Package   },
-    { id: 'goals'     as const, label: 'Goals',     icon: Target    },
-    { id: 'history'   as const, label: 'History',   icon: History   },
-    { id: 'purchased' as const, label: 'Purchased', icon: ShoppingBag },
-  ];
-
   return (
     <header
-      className="md:sticky md:top-0 z-30"
+      className="lg:sticky lg:top-0 z-30"
       style={{ backgroundColor: 'var(--surface)', borderBottom: '1px solid var(--border)', boxShadow: '0 1px 8px 0 rgba(0,0,0,0.07)' }}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
@@ -315,38 +308,7 @@ export function DashboardHeader() {
             MOBILE APP VIEW (Visible only on < md screens)
             Native-style layout: App bar -> Action bar -> Dashboard Cards
            ══════════════════════════════════════════════════════════════════ */}
-        <div className="md:hidden flex flex-col gap-3.5 pt-3 pb-3">
-          {/* Row 1: App Header Bar */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-xl bg-indigo-500 flex items-center justify-center flex-shrink-0 shadow-sm">
-                <Wallet size={20} className="text-white" />
-              </div>
-              <div>
-                <h1 className="text-base font-bold leading-tight" style={{ color: 'var(--text)' }}>
-                  My Purchase Fund
-                </h1>
-                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                  Personal planner
-                </p>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setDarkMode(!darkMode)}
-              className="w-11 h-11 rounded-xl flex items-center justify-center transition-colors cursor-pointer flex-shrink-0"
-              style={{
-                color: 'var(--text-muted)',
-                border: '1.5px solid var(--border)',
-                backgroundColor: 'var(--surface-2)',
-              }}
-              title={darkMode ? 'Light mode' : 'Dark mode'}
-              aria-label="Toggle theme"
-            >
-              {darkMode ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
-          </div>
-
+        <div className="lg:hidden flex flex-col gap-3.5 pt-3 pb-3">
           {/* ON PRODUCTS TAB ONLY: Quick Actions & Financial Dashboard */}
           {activeTab === 'products' && (
             <>
@@ -555,20 +517,9 @@ export function DashboardHeader() {
             DESKTOP HEADER (Visible only on md: and larger screens)
             Completely unchanged desktop layout
            ══════════════════════════════════════════════════════════════════ */}
-        <div className="hidden md:block">
-          {/* ── Row 1: Brand + Actions ─────────────── */}
-          <div className="flex items-center justify-between py-2.5 gap-2">
-            {/* Brand */}
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center flex-shrink-0">
-                <Wallet size={16} className="text-white" />
-              </div>
-              <div>
-                <p className="text-sm font-bold leading-tight" style={{ color: 'var(--text)' }}>My Purchase Fund</p>
-                <p className="text-xs leading-tight" style={{ color: 'var(--text-muted)' }}>Personal planner</p>
-              </div>
-            </div>
-
+        <div className="hidden lg:block">
+          {/* ── Actions ─────────────────────────────── */}
+          <div className="flex items-center justify-end py-2.5 gap-2">
             {/* Actions */}
             <div className="flex items-center gap-1.5">
               <button
@@ -595,14 +546,6 @@ export function DashboardHeader() {
                 onDataManagement={openDataManagement}
               />
 
-              <button
-                onClick={() => setDarkMode(!darkMode)}
-                className="p-2 rounded-lg transition-colors cursor-pointer"
-                style={{ color: 'var(--text-muted)', border: '1px solid var(--border)', backgroundColor: 'var(--surface)' }}
-                title={darkMode ? 'Light mode' : 'Dark mode'}
-              >
-                {darkMode ? <Sun size={15} /> : <Moon size={15} />}
-              </button>
             </div>
           </div>
 
@@ -611,27 +554,6 @@ export function DashboardHeader() {
             <FundSummaryCards summary={summary} onSaveFund={setTotalFund} />
           </div>
 
-          {/* ── Row 3: Tabs ───────────────────────── */}
-          <div className="flex gap-0 border-b" style={{ borderColor: 'var(--border)' }}>
-            {tabs.map(({ id, label, icon: Icon }) => {
-              const active = activeTab === id;
-              return (
-                <button
-                  key={id}
-                  onClick={() => setActiveTab(id)}
-                  className="flex items-center gap-1.5 px-3 sm:px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px cursor-pointer"
-                  style={{
-                    borderColor: active ? 'var(--accent-fund)' : 'transparent',
-                    color: active ? 'var(--accent-fund)' : 'var(--text-muted)',
-                    backgroundColor: active ? 'var(--accent-progress-bg)' : 'transparent',
-                  }}
-                >
-                  <Icon size={14} />
-                  <span>{label}</span>
-                </button>
-              );
-            })}
-          </div>
         </div>
 
       </div>

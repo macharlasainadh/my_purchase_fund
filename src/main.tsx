@@ -17,7 +17,7 @@ if (appBootSplash && window.matchMedia('(display-mode: standalone)').matches) {
   window.setTimeout(() => {
     appBootSplash.setAttribute('data-closing', 'true');
     window.setTimeout(() => appBootSplash.remove(), 280);
-  }, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 240 : 1600);
+  }, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 120 : 480);
 } else {
   appBootSplash?.remove();
 }

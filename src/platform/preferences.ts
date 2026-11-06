@@ -22,9 +22,11 @@ export function setThemePreference(value: ThemePreference) {
   if (typeof window !== 'undefined') window.dispatchEvent(new Event('platform-theme-change'));
 }
 export function applyTheme(value = getThemePreference()) {
-  const dark = value === 'dark' || (value === 'system' && window.matchMedia?.('(prefers-color-scheme: dark)').matches);
-  document.documentElement.classList.toggle('dark', Boolean(dark));
-  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  const dark = value === 'dark' || (value === 'system' && typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)').matches);
+  if (typeof document !== 'undefined') {
+    document.documentElement.classList.toggle('dark', Boolean(dark));
+    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  }
 }
 export function getLastModule(): PlatformModule {
   return read(LAST_MODULE_KEY) === 'payment-tracker' ? 'payment-tracker' : 'purchase-fund';

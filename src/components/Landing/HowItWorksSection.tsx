@@ -50,7 +50,7 @@ export function HowItWorksSection() {
             Simple 4-Step Journey
           </p>
           <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight" style={{ color: 'var(--text)' }}>
-            How My Purchase Fund Works
+            How MITRA Works
           </h2>
           <p className="text-sm sm:text-base mt-3" style={{ color: 'var(--text-muted)' }}>
             A disciplined, transparent framework to take you from a wishlist idea to a fully funded purchase.

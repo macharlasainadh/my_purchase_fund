@@ -1,6 +1,6 @@
-# My Purchase Fund
+# MITRA — Purchase • Pay • Plan
 
-A local-first purchase planner for tracking products, allocating a personal fund, setting savings goals, and recording purchases. The app is a static React web app; it does not connect to a server, bank, or account system.
+MITRA is a local-first personal finance app with two independent modules: Purchase Fund for products, allocations, goals, and purchases; and Payment Tracker for payment plans, installments, and payment history. The app is static and does not connect to a server, bank, or account system.
 
 ## Requirements
 
@@ -14,7 +14,7 @@ npm ci
 npm run dev
 ```
 
-The landing page opens first. Choose **Open App** to enter the planner. The planner can also be opened with `/#app`.
+The landing page opens first. Choose **Open MITRA** to enter the app. Purchase Fund can also be opened with `/#app`; Payment Tracker is available from the shared application switcher.
 
 ## Build, test, and preview
 
@@ -36,12 +36,13 @@ There is no backend, server environment configuration, database, or authenticati
 
 ## Data storage and backups
 
-- Products, goals, purchases, transactions, and display preferences are stored in this browser's `localStorage` for this site origin.
+- Purchase Fund products, goals, purchases, transactions, and display preferences are stored in this browser's `localStorage` for this site origin. Payment Tracker plans, payments, categories, and preferences use separate storage and independent backups.
 - Data is not synchronized between browsers or devices. Clearing site data, changing browser profiles, or losing access to the browser can remove access to the local copy.
 - Transaction history is retained in full; the app does not automatically delete older entries. This preserves the planner's audit trail, but browser storage has a finite, browser-dependent quota. Export a backup periodically, especially after substantial use. If a browser refuses a save, the app displays a warning and offers the backup tools. A failed save may not survive refresh or closing the app.
 - Use **More → Backup & Export** to download a JSON backup. Store that file somewhere safe; it contains the planner data in readable form and is not encrypted.
 - Use **Restore from Backup** to move data to another browser or restore it. Restore replaces the current planner data only after the file passes validation. Keep a separate backup before restoring.
 - Product and transaction CSV exports are available in the same dialog.
+- Payment Tracker JSON backup, restore, and CSV exports are available from Payment Tracker → Settings → Data Management.
 - Product images entered as URLs load directly from their hosting websites. Those websites can receive your network address when an image is shown. Shopping links only contact third-party websites when you open them.
 
 JSON exports use backup schema version 1. Older exports without a version marker are read as version 1; unsupported future versions are rejected. When the data shape changes, increment the schema version and add a migration before accepting the new format.

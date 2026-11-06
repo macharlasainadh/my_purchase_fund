@@ -4,9 +4,9 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Purchase Fund — Plan, Allocate & Track Your Purchases</title>
-    <meta name="description" content="Organize what you want to buy, decide where your money goes, and track your progress until you're ready to purchase. Local-first, private by design." />
-    <meta name="theme-color" content="#6366f1" />
+    <title>MITRA — Purchase • Pay • Plan</title>
+    <meta name="description" content="MITRA brings Purchase Fund and Payment Tracker together in one private personal finance app." />
+    <meta name="theme-color" content="#4c06a9" />
     <script>
       try {
         const preference = localStorage.getItem('platform_theme') || 'system';
@@ -17,16 +17,16 @@
     <link rel="apple-touch-icon" href="/icon-192.png" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Purchase Fund" />
+    <meta name="apple-mobile-web-app-title" content="MITRA" />
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="My Purchase Fund — Plan, Allocate & Track Your Purchases" />
-    <meta property="og:description" content="Organize what you want to buy, decide where your money goes, and track your progress until you're ready to purchase." />
+    <meta property="og:title" content="MITRA — Purchase • Pay • Plan" />
+    <meta property="og:description" content="One private finance app for planning purchases and tracking payments." />
     <meta property="og:image" content="/icon-512.png" />
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="My Purchase Fund — Plan, Allocate & Track Your Purchases" />
-    <meta name="twitter:description" content="Organize what you want to buy, decide where your money goes, and track your progress until you're ready to purchase." />
+    <meta name="twitter:title" content="MITRA — Purchase • Pay • Plan" />
+    <meta name="twitter:description" content="One private finance app for planning purchases and tracking payments." />
     <style>
       #app-boot-splash {
         position: fixed;
@@ -36,30 +36,33 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 12px;
+        gap: 18px;
         padding: 24px;
-        background: #0f172a;
-        color: #f8fafc;
-        font: 700 22px/1.2 system-ui, sans-serif;
+        background: radial-gradient(ellipse at 50% 40%, #fff 0, #f6f2ff 65%, #eeebf8 100%);
+        color: #1b0d3f;
         opacity: 1;
         transition: opacity 260ms ease, visibility 260ms ease;
       }
-      #app-boot-splash span {
-        animation: app-splash-name 900ms 120ms cubic-bezier(.2,.8,.2,1) both;
+      #app-boot-splash img {
+        width: min(82vw, 620px);
+        height: auto;
+        animation: app-splash-name 560ms cubic-bezier(.2,.8,.2,1) both;
       }
+      #app-boot-splash .mitra-splash-dark { display: none; }
       #app-boot-splash i {
-        width: 42px;
-        height: 3px;
+        width: 64px;
+        height: 4px;
         border-radius: 999px;
-        background: linear-gradient(90deg, #818cf8, #c4b5fd);
+        background: linear-gradient(90deg, #4c06a9, #14c77a, #ffca18);
         transform: scaleX(0);
-        animation: app-splash-rule 900ms 240ms cubic-bezier(.2,.8,.2,1) both;
+        animation: app-splash-rule 620ms 80ms cubic-bezier(.2,.8,.2,1) both;
       }
-      #app-boot-splash small {
-        color: #94a3b8;
-        font: 500 13px/1.3 system-ui, sans-serif;
-        animation: app-splash-name 900ms 320ms cubic-bezier(.2,.8,.2,1) both;
+      .dark #app-boot-splash {
+        background: radial-gradient(ellipse at 50% 40%, #3f1671 0, #210944 55%, #14062d 100%);
+        color: #fff;
       }
+      .dark #app-boot-splash .mitra-splash-light { display: none; }
+      .dark #app-boot-splash .mitra-splash-dark { display: block; }
       #app-boot-splash[data-closing="true"] {
         visibility: hidden;
         opacity: 0;
@@ -76,7 +79,7 @@
         #app-boot-splash { display: flex; }
       }
       @media (prefers-reduced-motion: reduce) {
-        #app-boot-splash span,
+        #app-boot-splash img,
         #app-boot-splash i,
         #app-boot-splash small { animation: none; }
         #app-boot-splash { transition-duration: 1ms; }
@@ -85,9 +88,10 @@
   </head>
   <body>
     <div id="app-boot-splash" aria-hidden="true">
-      <span>My Purchase Fund</span>
+      <img class="mitra-splash-light" src="/mitra-premium.svg" alt="MITRA — Purchase • Pay • Plan" />
+      <img class="mitra-splash-dark" src="/mitra-logo-dark.svg" alt="" />
       <i></i>
-      <small>Personal purchase planner</small>
+      <small>Securely preparing your finance workspace…</small>
     </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>

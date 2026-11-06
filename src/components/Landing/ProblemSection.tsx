@@ -75,7 +75,7 @@ export function ProblemSection() {
             </div>
           </div>
 
-          {/* Card 2: The Purchase Fund Way (Intentional) */}
+          {/* Card 2: The MITRA way (intentional) */}
           <div
             className="rounded-3xl p-6 sm:p-8 border shadow-lg flex flex-col justify-between relative overflow-hidden"
             style={{
@@ -96,7 +96,7 @@ export function ProblemSection() {
                   <CheckCircle2 size={18} />
                 </div>
                 <h3 className="text-base sm:text-lg font-bold text-indigo-600 dark:text-indigo-400">
-                  The My Purchase Fund Way
+                  The MITRA Way
                 </h3>
               </div>
 

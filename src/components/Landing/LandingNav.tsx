@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Wallet, Sun, Moon, ArrowRight, Menu, X } from 'lucide-react';
-import { usePurchaseStore } from '../../store/usePurchaseStore';
+import { ArrowRight, Menu, X } from 'lucide-react';
 
 interface LandingNavProps {
   onOpenApp: () => void;
+  darkMode: boolean;
 }
 
-export function LandingNav({ onOpenApp }: LandingNavProps) {
-  const { darkMode, setDarkMode } = usePurchaseStore();
+export function LandingNav({ onOpenApp, darkMode }: LandingNavProps) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -56,21 +55,12 @@ export function LandingNav({ onOpenApp }: LandingNavProps) {
         {/* Brand */}
         <button
           type="button"
-          aria-label="My Purchase Fund, back to top"
+          aria-label="MITRA, back to top"
           className="flex items-center gap-2.5 cursor-pointer text-left"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         >
-          <div className="w-9 h-9 rounded-xl bg-indigo-500 flex items-center justify-center flex-shrink-0 shadow-md shadow-indigo-500/25">
-            <Wallet size={19} className="text-white" />
-          </div>
-          <div>
-            <span className="text-base sm:text-lg font-bold tracking-tight leading-none block" style={{ color: 'var(--text)' }}>
-              My Purchase Fund
-            </span>
-            <span className="text-[11px] font-medium leading-none block mt-0.5" style={{ color: 'var(--text-muted)' }}>
-              Personal purchase planner
-            </span>
-          </div>
+          <img src="/mitra-logo-light.svg" alt="MITRA · Purchase · Pay · Plan" className="block dark:hidden w-[152px] sm:w-[176px] h-auto" />
+          <img src="/mitra-logo-dark.svg" alt="MITRA · Purchase · Pay · Plan" className="hidden dark:block w-[152px] sm:w-[176px] h-auto" />
         </button>
 
         {/* Desktop Links */}
@@ -90,16 +80,6 @@ export function LandingNav({ onOpenApp }: LandingNavProps) {
 
         {/* Right Actions */}
         <div className="flex items-center gap-2.5">
-          {/* Theme Toggle */}
-          <button
-            onClick={() => setDarkMode(!darkMode)}
-            className="w-10 h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer border border-[var(--border)] bg-[var(--surface)] text-[var(--text-muted)] hover:text-[var(--text)] active:scale-95"
-            title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-            aria-label="Toggle theme"
-          >
-            {darkMode ? <Sun size={17} /> : <Moon size={17} />}
-          </button>
-
           {/* Primary CTA button */}
           <button
             onClick={onOpenApp}

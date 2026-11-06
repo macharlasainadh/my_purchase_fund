@@ -15,13 +15,14 @@ import { LandingFooter } from './LandingFooter';
 
 interface LandingPageProps {
   onOpenApp: () => void;
+  darkMode: boolean;
 }
 
-export function LandingPage({ onOpenApp }: LandingPageProps) {
+export function LandingPage({ onOpenApp, darkMode }: LandingPageProps) {
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--bg)', color: 'var(--text)' }}>
       {/* Top Fixed Navigation */}
-      <LandingNav onOpenApp={onOpenApp} />
+      <LandingNav darkMode={darkMode} onOpenApp={onOpenApp} />
 
       {/* Main Content Sections */}
       <main className="flex-1">

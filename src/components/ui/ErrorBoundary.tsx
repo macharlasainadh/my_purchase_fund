@@ -42,7 +42,7 @@ export class ErrorBoundary extends Component<Props, State> {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `my-purchase-fund-emergency-backup-${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `mitra-purchase-fund-emergency-backup-${new Date().toISOString().split('T')[0]}.json`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (e) {

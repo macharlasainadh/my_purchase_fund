@@ -40,7 +40,7 @@ export function HeroSection({ onOpenApp }: HeroSectionProps) {
             }}
           >
             <Sparkles size={13} />
-            <span>Intentional Purchase Planner</span>
+            <span>MITRA · PURCHASE · PAY · PLAN</span>
           </div>
 
           {/* Headline */}
@@ -48,9 +48,9 @@ export function HeroSection({ onOpenApp }: HeroSectionProps) {
             className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.15] mb-5 text-balance"
             style={{ color: 'var(--text)' }}
           >
-            Turn Wishlists Into Plans.{' '}
-            <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
-              Fund Purchases With Purpose.
+            Personal finance, planned with purpose.{' '}
+            <span className="bg-gradient-to-r from-violet-700 via-purple-600 to-emerald-500 bg-clip-text text-transparent">
+              Purchase. Pay. Plan.
             </span>
           </h1>
 
@@ -59,7 +59,7 @@ export function HeroSection({ onOpenApp }: HeroSectionProps) {
             className="text-base sm:text-lg lg:text-xl font-normal leading-relaxed mb-8 max-w-2xl"
             style={{ color: 'var(--text-muted)' }}
           >
-            Organize what you want to buy, decide where your money goes, and track your progress until you're ready to purchase.
+            Plan purchases with Purchase Fund. Track scheduled bills and installments with Payment Tracker. Two focused tools, one private finance app.
           </p>
 
           {/* CTAs */}
@@ -68,7 +68,7 @@ export function HeroSection({ onOpenApp }: HeroSectionProps) {
               onClick={onOpenApp}
               className="w-full sm:w-auto h-13 px-8 rounded-2xl text-base font-bold text-white bg-indigo-500 hover:bg-indigo-600 active:scale-[0.98] transition-all flex items-center justify-center gap-2.5 shadow-lg shadow-indigo-500/25 cursor-pointer"
             >
-              <span>Start Planning — Open App</span>
+              <span>Open MITRA</span>
               <ArrowRight size={18} />
             </button>
 
@@ -137,7 +137,7 @@ export function HeroSection({ onOpenApp }: HeroSectionProps) {
                   color: 'var(--text-muted)',
                 }}
               >
-                mypurchasefund.app
+                MITRA · PERSONAL FINANCE
               </div>
               <div className="w-12" />
             </div>

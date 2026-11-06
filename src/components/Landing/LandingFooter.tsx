@@ -1,5 +1,5 @@
 import React from 'react';
-import { Wallet, ArrowUp } from 'lucide-react';
+import { ArrowUp } from 'lucide-react';
 
 interface LandingFooterProps {
   onOpenApp: () => void;
@@ -22,13 +22,9 @@ export function LandingFooter({ onOpenApp }: LandingFooterProps) {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
           {/* Brand Col */}
           <div className="md:col-span-2 flex flex-col gap-3">
-            <button type="button" aria-label="My Purchase Fund, back to top" className="flex items-center gap-2.5 cursor-pointer text-left" onClick={scrollToTop}>
-              <div className="w-8 h-8 rounded-xl bg-indigo-500 flex items-center justify-center text-white shadow-sm">
-                <Wallet size={16} />
-              </div>
-              <span className="text-base font-bold" style={{ color: 'var(--text)' }}>
-                My Purchase Fund
-              </span>
+            <button type="button" aria-label="MITRA, back to top" className="flex items-center cursor-pointer text-left" onClick={scrollToTop}>
+              <img src="/mitra-logo-light.svg" alt="MITRA · Purchase · Pay · Plan" className="block dark:hidden w-[165px] h-auto" />
+              <img src="/mitra-logo-dark.svg" alt="MITRA · Purchase · Pay · Plan" className="hidden dark:block w-[165px] h-auto" />
             </button>
             <p className="text-xs sm:text-sm leading-relaxed max-w-sm" style={{ color: 'var(--text-muted)' }}>
               Organize what you want to buy, decide where your money goes, and track your progress until you're ready to purchase.
@@ -113,7 +109,7 @@ export function LandingFooter({ onOpenApp }: LandingFooterProps) {
           className="pt-6 border-t flex flex-col sm:flex-row items-center justify-between gap-3 text-xs"
           style={{ borderColor: 'var(--border)', color: 'var(--text-subtle)' }}
         >
-          <p>© {new Date().getFullYear()} My Purchase Fund. Built for intentional spending.</p>
+          <p>© {new Date().getFullYear()} MITRA. Purchase · Pay · Plan.</p>
           <p>Progressive Web App · Works Offline</p>
         </div>
       </div>

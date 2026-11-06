@@ -24,7 +24,7 @@ export function MobileShowcaseSection() {
             </h2>
 
             <p className="text-sm sm:text-base leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-              When you open My Purchase Fund on your smartphone, every workflow adapts into a dedicated full-screen mobile application page with native navigation, thumb-friendly touch targets, and zero horizontal squishing.
+              When you open MITRA on your smartphone, each finance module adapts to a dedicated mobile layout with native navigation and thumb-friendly touch targets.
             </p>
 
             <div className="flex flex-col gap-3.5 mt-2 text-sm" style={{ color: 'var(--text-muted)' }}>
@@ -74,10 +74,8 @@ export function MobileShowcaseSection() {
                 }}
               >
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-indigo-500 flex items-center justify-center text-white">
-                    <span className="text-xs font-bold">₹</span>
-                  </div>
-                  <span className="text-xs font-bold" style={{ color: 'var(--text)' }}>My Purchase Fund</span>
+                  <img src="/mitra-mark.svg" alt="" className="w-7 h-7 rounded-lg" />
+                  <span className="text-xs font-bold" style={{ color: 'var(--text)' }}>Purchase Fund</span>
                 </div>
                 <span className="text-[10px] font-bold text-indigo-500 px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950">
                   Mobile App
