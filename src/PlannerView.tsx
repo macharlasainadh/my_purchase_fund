@@ -56,7 +56,7 @@ export default function PlannerView() {
               onClick={() => setActiveTab(id)}
               aria-current={active ? 'page' : undefined}
               className="flex-1 min-h-[48px] py-1 flex flex-col items-center justify-center gap-1 rounded-xl transition-all cursor-pointer select-none"
-              style={{ color: active ? '#6366f1' : 'var(--text-muted)', backgroundColor: active ? 'var(--accent-progress-bg)' : 'transparent' }}
+              style={{ color: active ? 'var(--accent-fund)' : 'var(--text-muted)', backgroundColor: active ? 'var(--accent-progress-bg)' : 'transparent' }}
             >
               <Icon size={20} className={active ? 'stroke-[2.5]' : 'stroke-[1.75]'} />
               <span className={`text-[11px] leading-none ${active ? 'font-bold' : 'font-medium'}`}>{label}</span>

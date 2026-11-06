@@ -13,6 +13,7 @@ import type {
 } from '../types';
 import { generateId, getFundingStatus } from '../utils/allocation';
 import { sanitizeBackupData } from '../utils/sanitizeBackup';
+import { setThemePreference } from '../platform/preferences';
 
 // ─── Store Actions Interface ──────────────────────────────────────────────────
 
@@ -682,11 +683,7 @@ export const usePurchaseStore = create<PurchaseState & PurchaseActions>()(
 
       setDarkMode(val) {
         set({ darkMode: val });
-        if (val) {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
+        setThemePreference(val ? 'dark' : 'light');
       },
 
       setActiveTab(tab) {

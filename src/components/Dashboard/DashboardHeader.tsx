@@ -621,8 +621,8 @@ export function DashboardHeader() {
                   onClick={() => setActiveTab(id)}
                   className="flex items-center gap-1.5 px-3 sm:px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px cursor-pointer"
                   style={{
-                    borderColor: active ? '#6366f1' : 'transparent',
-                    color: active ? '#6366f1' : 'var(--text-muted)',
+                    borderColor: active ? 'var(--accent-fund)' : 'transparent',
+                    color: active ? 'var(--accent-fund)' : 'var(--text-muted)',
                     backgroundColor: active ? 'var(--accent-progress-bg)' : 'transparent',
                   }}
                 >
