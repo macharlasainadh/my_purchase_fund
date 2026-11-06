@@ -3,19 +3,22 @@ export const PAYMENT_HISTORY_KEY = 'payment_tracker_history';
 export const PAYMENT_PREFERENCES_KEY = 'payment_tracker_preferences';
 export const PAYMENT_BACKUP_FORMAT = 'my-purchase-fund.payment-tracker';
 export const PAYMENT_BACKUP_VERSION = 1;
-export const PAYMENT_CATEGORIES = ['Bills', 'Insurance', 'Memberships', 'Subscriptions', 'Education', 'Home', 'Other'];
+export const PAYMENT_CATEGORIES = ['Bills', 'Insurance', 'Memberships', 'Subscriptions', 'Education', 'Home', 'Investment', 'Other'];
 
 export type PaymentFrequency = 'once' | 'monthly' | 'quarterly' | 'half-yearly' | 'yearly';
 export type PaymentPlan = {
   id: string; name: string; provider: string; category: string; totalPaise: number;
   installmentPaise: number; frequency: PaymentFrequency; startDate: string; endDate: string; createdAt: string;
+  archivedAt?: string;
 };
 export type PaymentRecord = {
-  id: string; planId: string; installmentDate?: string; paymentDate: string; amountPaise: number;
+  id: string; planId: string; installmentDate?: string; installmentId?: string; paymentDate: string; amountPaise: number;
+  category?: string;
   method?: string; reference?: string; notes?: string;
 };
 export type PaymentTrackerData = { plans: PaymentPlan[]; records: PaymentRecord[]; categories: string[]; preferences: Record<string, unknown> };
 export type Installment = { id: string; planId: string; dueDate: string; amountPaise: number; paidPaise: number; status: 'paid'|'upcoming'|'due-today'|'overdue' };
+export type TimelineFilter = 'all'|'paid'|'upcoming'|'overdue';
 const FREQUENCIES = new Set<PaymentFrequency>(['once','monthly','quarterly','half-yearly','yearly']);
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const SAFE_ID = /^[\w-]{1,100}$/;
@@ -41,9 +44,30 @@ export function validatePlan(plan: PaymentPlan): void {
   if (!FREQUENCIES.has(plan.frequency)) throw new Error('The payment frequency is not supported.');
   if (!isValidLocalDate(plan.startDate) || !isValidLocalDate(plan.endDate) || plan.endDate < plan.startDate) throw new Error('Plan dates must be valid local calendar dates, with the end date on or after the start date.');
   if (typeof plan.createdAt !== 'string' || !Number.isFinite(Date.parse(plan.createdAt))) throw new Error('The plan creation date is invalid.');
+  if (plan.archivedAt !== undefined && (typeof plan.archivedAt !== 'string' || !Number.isFinite(Date.parse(plan.archivedAt)))) throw new Error('The plan archive date is invalid.');
 }
 export function planPaidTotal(planId: string, records: PaymentRecord[]): number {
   return records.filter(record => record.planId === planId).reduce((sum, record) => sum + record.amountPaise, 0);
+}
+export function isPlanArchived(plan: PaymentPlan): boolean { return Boolean(plan.archivedAt); }
+export function archivePlan(plan: PaymentPlan, archivedAt = new Date().toISOString()): PaymentPlan {
+  if (!Number.isFinite(Date.parse(archivedAt))) throw new Error('Archive timestamp is invalid.');
+  return { ...plan, archivedAt };
+}
+export function restorePlan(plan: PaymentPlan): PaymentPlan {
+  const { archivedAt: _archivedAt, ...activePlan } = plan;
+  return activePlan;
+}
+export function deletePlanWithoutPayments(planId: string, plans: PaymentPlan[], records: PaymentRecord[]): PaymentPlan[] {
+  if (records.some(record => record.planId === planId)) throw new Error('Plans with payment history must be archived to preserve their transactions.');
+  return plans.filter(plan => plan.id !== planId);
+}
+export function installmentIdFor(planId: string, dueDate: string): string { return `${planId}:${dueDate}`; }
+export function filterTimelineItems<T extends Installment>(items: T[], filter: TimelineFilter): T[] {
+  if (filter === 'all') return items;
+  if (filter === 'paid') return items.filter(item => item.status === 'paid');
+  if (filter === 'overdue') return items.filter(item => item.status === 'overdue');
+  return items.filter(item => item.status === 'upcoming' || item.status === 'due-today');
 }
 export function hasScheduleChanges(previous: PaymentPlan, next: PaymentPlan): boolean {
   return previous.totalPaise !== next.totalPaise || previous.installmentPaise !== next.installmentPaise || previous.frequency !== next.frequency || previous.startDate !== next.startDate || previous.endDate !== next.endDate;
@@ -62,6 +86,17 @@ export function validatePaymentRecord(plan: PaymentPlan, payment: PaymentRecord,
   const alreadyPaid = planPaidTotal(plan.id, records);
   if (payment.amountPaise > plan.totalPaise - alreadyPaid) throw new Error('Payment exceeds the plan’s remaining commitment.');
   for (const field of ['method','reference','notes'] as const) if (payment[field] !== undefined && typeof payment[field] !== 'string') throw new Error(`Payment ${field} must be text.`);
+  if (payment.category !== undefined && (typeof payment.category !== 'string' || !payment.category.trim())) throw new Error('Payment category must be a nonempty name.');
+  if (payment.installmentId !== undefined && (!payment.installmentDate || payment.installmentId !== installmentIdFor(plan.id, payment.installmentDate))) throw new Error('The payment installment association is invalid.');
+  if (payment.installmentDate) {
+    const installment = scheduleForPlan(plan, records, '0001-01-01').find(item => item.dueDate === payment.installmentDate);
+    if (installment) {
+      const linked = records.filter(record => record.planId === plan.id && (record.installmentId
+        ? record.installmentId === installment.id
+        : record.installmentDate === installment.dueDate)).reduce((sum, record) => sum + record.amountPaise, 0);
+      if (payment.amountPaise > Math.max(0, installment.amountPaise - linked)) throw new Error('Payment exceeds the selected installment’s remaining amount. Choose an unassigned plan payment to record an amount not tied to this installment.');
+    }
+  }
 }
 export function validatePaymentData(data: PaymentTrackerData): PaymentTrackerData {
   if (!data || !Array.isArray(data.plans) || !Array.isArray(data.records) || !Array.isArray(data.categories) || !data.preferences || typeof data.preferences !== 'object' || Array.isArray(data.preferences)) throw new Error('Backup must include payment plans, payment records, categories, and preferences.');
@@ -78,6 +113,8 @@ export function validatePaymentData(data: PaymentTrackerData): PaymentTrackerDat
     if ((record.installmentDate !== undefined && !isValidLocalDate(record.installmentDate)) || !isValidLocalDate(record.paymentDate)) throw new Error('Payment record dates must be valid local calendar dates.');
     if (!Number.isSafeInteger(record.amountPaise) || record.amountPaise <= 0) throw new Error('Payment record amounts must be positive whole paise amounts.');
     for (const field of ['method','reference','notes'] as const) if (record[field] !== undefined && typeof record[field] !== 'string') throw new Error(`Payment record ${field} must be text.`);
+    if (record.category !== undefined && (typeof record.category !== 'string' || !record.category.trim())) throw new Error('Payment record categories must be nonempty names.');
+    if (record.installmentId !== undefined && (!record.installmentDate || record.installmentId !== installmentIdFor(record.planId, record.installmentDate))) throw new Error('A payment record has an invalid installment association.');
     paidByPlan.set(record.planId,(paidByPlan.get(record.planId)??0)+record.amountPaise);
   });
   for (const plan of data.plans) if ((paidByPlan.get(plan.id)??0) > plan.totalPaise) throw new Error(`Recorded payments exceed the commitment for “${plan.name}”.`);
@@ -110,6 +147,8 @@ export function sanitizeStoredRecords(raw: string | null, plans: PaymentPlan[]):
       const plan=planMap.get(record.planId),amount=record.amountPaise;
       if(!plan||(record.installmentDate!==undefined&&!isValidLocalDate(record.installmentDate))||!isValidLocalDate(record.paymentDate)||!Number.isSafeInteger(amount)||amount<=0)continue;
       if(['method','reference','notes'].some(field=>record[field]!==undefined&&typeof record[field]!=='string'))continue;
+      if(record.category!==undefined&&(typeof record.category!=='string'||!record.category.trim()))continue;
+      if(record.installmentId!==undefined&&(!record.installmentDate||record.installmentId!==installmentIdFor(record.planId,record.installmentDate)))continue;
       if((paidByPlan.get(plan.id)??0)+amount>plan.totalPaise)continue;
       output.push(record as PaymentRecord);ids.add(record.id);paidByPlan.set(plan.id,(paidByPlan.get(plan.id)??0)+amount);
     }
@@ -123,19 +162,17 @@ export function scheduleForPlan(plan: PaymentPlan, records: PaymentRecord[], tod
   while (remaining>0 && result.length<1200) {
     const dueDate=nextScheduleDate(plan.startDate,offset); if(dueDate>plan.endDate) break;
     const amountPaise=Math.min(plan.installmentPaise,remaining);
-    result.push({id:`${plan.id}:${dueDate}`,planId:plan.id,dueDate,amountPaise,paidPaise:0,status:'upcoming'});
+    result.push({id:installmentIdFor(plan.id,dueDate),planId:plan.id,dueDate,amountPaise,paidPaise:0,status:'upcoming'});
     remaining-=amountPaise;
     if(step===0) break; offset+=step;
   }
-  const installmentsByDate=new Map(result.map(item=>[item.dueDate,item]));
-  let unapplied=planRecords.filter(record=>!record.installmentDate||!installmentsByDate.has(record.installmentDate)).reduce((sum,record)=>sum+record.amountPaise,0);
   for(const installment of result){
-    const linkedPaid=planRecords.filter(record=>record.installmentDate===installment.dueDate).reduce((sum,record)=>sum+record.amountPaise,0);
-    const direct=Math.min(installment.amountPaise,linkedPaid);
-    unapplied+=linkedPaid-direct;
-    const extra=Math.min(installment.amountPaise-direct,unapplied);
-    installment.paidPaise=direct+extra;
-    unapplied-=extra;
+    // Plan balance includes unassigned payments, but installments only reflect
+    // payments explicitly associated with that installment.
+    const linkedPaid=planRecords.filter(record=>record.installmentId
+      ? record.installmentId===installment.id
+      : record.installmentDate===installment.dueDate).reduce((sum,record)=>sum+record.amountPaise,0);
+    installment.paidPaise=Math.min(installment.amountPaise,linkedPaid);
     installment.status=installment.paidPaise>=installment.amountPaise?'paid':installment.dueDate<today?'overdue':installment.dueDate===today?'due-today':'upcoming';
   }
   return result;

@@ -2,9 +2,10 @@ import { describe, expect, it } from 'vitest';
 import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { PaymentTracker } from '../src/platform/PaymentTracker';
-import { PAYMENT_BACKUP_FORMAT, PAYMENT_BACKUP_VERSION, PAYMENT_CATEGORIES, hasScheduleChanges, localDate, nextScheduleDate, parsePaymentBackup, planPaidTotal, sanitizeStoredPlans, sanitizeStoredRecords, scheduleForPlan, validatePaymentRecord, validatePlanEdit, type PaymentPlan, type PaymentRecord, type PaymentTrackerData } from '../src/platform/paymentTrackerData';
+import { PAYMENT_BACKUP_FORMAT, PAYMENT_BACKUP_VERSION, PAYMENT_CATEGORIES, archivePlan, deletePlanWithoutPayments, filterTimelineItems, hasScheduleChanges, installmentIdFor, isPlanArchived, localDate, nextScheduleDate, parsePaymentBackup, planPaidTotal, restorePlan, sanitizeStoredPlans, sanitizeStoredRecords, scheduleForPlan, validatePaymentRecord, validatePlanEdit, type PaymentPlan, type PaymentRecord, type PaymentTrackerData } from '../src/platform/paymentTrackerData';
 
 const plan=(overrides:Partial<PaymentPlan>={}):PaymentPlan=>({id:'plan-1',name:'Annual service',provider:'Provider',category:'Bills',totalPaise:30000,installmentPaise:10000,frequency:'monthly',startDate:'2024-01-31',endDate:'2024-04-30',createdAt:'2024-01-01T00:00:00.000Z',...overrides});
+function renderWithStoredPlans(page:string,plans:PaymentPlan[],records:PaymentRecord[]=[]){const original=Object.getOwnPropertyDescriptor(globalThis,'localStorage');Object.defineProperty(globalThis,'localStorage',{configurable:true,value:{getItem:(key:string)=>key==='payment_tracker_plans'?JSON.stringify(plans):key==='payment_tracker_history'?JSON.stringify(records):null}});try{return renderToString(React.createElement(PaymentTracker,{page,onNavigate:()=>{}}));}finally{if(original)Object.defineProperty(globalThis,'localStorage',original);else Reflect.deleteProperty(globalThis,'localStorage');}}
 
 describe('Payment Tracker data and schedules',()=>{
   it('renders the empty overview without unresolved schedule references',()=>{
@@ -50,7 +51,7 @@ describe('Payment Tracker data and schedules',()=>{
     expect(localDate(new Date(2026,5,18,0,30))).toBe('2026-06-18');
   });
   it('allows partial and multiple payments for one installment and completes it only at zero balance',()=>{
-    const p=plan({startDate:'2026-01-01',endDate:'2026-03-01'});
+    const p=plan({startDate:'2026-01-01',endDate:'2026-04-01',totalPaise:40000});
     const first:PaymentRecord={id:'payment-1',planId:p.id,installmentDate:'2026-01-01',paymentDate:'2026-01-02',amountPaise:4000};
     const second:PaymentRecord={id:'payment-2',planId:p.id,installmentDate:'2026-01-01',paymentDate:'2026-01-03',amountPaise:3500};
     validatePaymentRecord(p,first,[]);
@@ -60,10 +61,12 @@ describe('Payment Tracker data and schedules',()=>{
     validatePaymentRecord(p,final,[first,second]);
     expect(scheduleForPlan(p,[first,second,final],'2026-01-04')[0]).toMatchObject({paidPaise:10000,status:'paid'});
     const additional:PaymentRecord={id:'payment-4',planId:p.id,installmentDate:'2026-01-01',paymentDate:'2026-01-05',amountPaise:2500};
-    validatePaymentRecord(p,additional,[first,second,final]);
-    expect(scheduleForPlan(p,[first,second,final,additional],'2026-01-05').map(i=>i.paidPaise)).toEqual([10000,2500,0]);
+    expect(()=>validatePaymentRecord(p,additional,[first,second,final])).toThrow(/selected installment/i);
+    const nextInstallment:PaymentRecord={id:'payment-5',planId:p.id,installmentDate:'2026-02-01',paymentDate:'2026-01-05',amountPaise:2500};
+    validatePaymentRecord(p,nextInstallment,[first,second,final]);
+    expect(scheduleForPlan(p,[first,second,final,nextInstallment],'2026-01-05').map(i=>i.paidPaise)).toEqual([10000,2500,0,0]);
   });
-  it('prevents duplicate transactions and records only the remaining amount when marking a partial installment paid',()=>{
+  it('prevents duplicate transaction IDs and records only the remaining amount for a partial installment',()=>{
     const p=plan({startDate:'2026-01-01',endDate:'2026-01-01',frequency:'once',totalPaise:10000,installmentPaise:10000});
     const partial:PaymentRecord={id:'payment-1',planId:p.id,installmentDate:p.startDate,paymentDate:'2026-01-02',amountPaise:3500};
     expect(()=>validatePaymentRecord(p,partial,[partial])).toThrow(/already been recorded/i);
@@ -72,13 +75,79 @@ describe('Payment Tracker data and schedules',()=>{
     expect(scheduleForPlan(p,[partial,remainder],'2026-01-03')[0]).toMatchObject({paidPaise:10000,status:'paid'});
     expect(planPaidTotal(p.id,[partial,remainder])).toBe(10000);
   });
-  it('accepts unassigned payments, allocates them to earliest installments and caps them at the plan balance',()=>{
+  it('keeps unassigned payments out of scheduled installments while retaining plan totals',()=>{
     const p=plan({startDate:'2026-01-01',endDate:'2026-03-01'});
     const payment:PaymentRecord={id:'payment-1',planId:p.id,paymentDate:'2026-01-02',amountPaise:12000};
     validatePaymentRecord(p,payment,[]);
     expect(planPaidTotal(p.id,[payment])).toBe(12000);
-    expect(scheduleForPlan(p,[payment],'2026-01-03').map(i=>[i.paidPaise,i.status])).toEqual([[10000,'paid'],[2000,'upcoming'],[0,'upcoming']]);
+    expect(scheduleForPlan(p,[payment],'2026-01-03').map(i=>[i.paidPaise,i.status])).toEqual([[0,'overdue'],[0,'upcoming'],[0,'upcoming']]);
     expect(()=>validatePaymentRecord(p,{...payment,id:'payment-2',amountPaise:18001},[payment])).toThrow(/remaining commitment/i);
+  });
+  it('applies payments only to their explicit installment association and prevents over-allocation',()=>{
+    const p=plan({startDate:'2026-01-01',endDate:'2026-04-01',totalPaise:40000});
+    const records:PaymentRecord[]=[
+      {id:'unassigned',planId:p.id,paymentDate:'2026-01-01',amountPaise:10000},
+      {id:'jan',planId:p.id,installmentDate:'2026-01-01',installmentId:installmentIdFor(p.id,'2026-01-01'),paymentDate:'2026-01-02',amountPaise:6000},
+      {id:'feb',planId:p.id,installmentDate:'2026-02-01',installmentId:installmentIdFor(p.id,'2026-02-01'),paymentDate:'2026-02-02',amountPaise:10000},
+    ];
+    const schedule=scheduleForPlan(p,records,'2026-02-03');
+    expect(schedule.map(i=>[i.paidPaise,i.status])).toEqual([[6000,'overdue'],[10000,'paid'],[0,'upcoming'],[0,'upcoming']]);
+    expect(planPaidTotal(p.id,records)).toBe(26000);
+    expect(()=>validatePaymentRecord(p,{id:'too-much',planId:p.id,installmentDate:'2026-01-01',installmentId:installmentIdFor(p.id,'2026-01-01'),paymentDate:'2026-02-03',amountPaise:4001},records)).toThrow(/selected installment/i);
+  });
+  it('filters timeline statuses without duplicating or reordering schedule entries',()=>{
+    const p=plan({startDate:'2026-01-01',endDate:'2026-04-01',totalPaise:40000});
+    const items=scheduleForPlan(p,[{id:'paid',planId:p.id,installmentDate:'2026-01-01',paymentDate:'2026-01-01',amountPaise:10000}],'2026-03-01');
+    expect(filterTimelineItems(items,'all')).toEqual(items);
+    expect(filterTimelineItems(items,'paid').map(i=>i.dueDate)).toEqual(['2026-01-01']);
+    expect(filterTimelineItems(items,'upcoming').map(i=>i.status)).toEqual(['due-today','upcoming']);
+    expect(filterTimelineItems(items,'overdue').map(i=>i.status)).toEqual(['overdue']);
+    expect(new Set(items.map(i=>i.id)).size).toBe(items.length);
+  });
+  it('includes Investment and restores older backups without changing their shape',()=>{
+    expect(PAYMENT_CATEGORIES).toContain('Investment');
+    const p=plan();
+    const oldData:PaymentTrackerData={plans:[p],records:[{id:'legacy',planId:p.id,paymentDate:'2024-01-31',amountPaise:1000}],categories:['Bills'],preferences:{}};
+    const restored=parsePaymentBackup({format:PAYMENT_BACKUP_FORMAT,version:1,exportedAt:'2024-02-01T00:00:00.000Z',data:oldData});
+    expect(restored).toEqual(oldData);
+    const investmentRecord:PaymentRecord={id:'investment-payment',planId:p.id,paymentDate:'2024-02-01',amountPaise:1000,category:'Investment'};
+    expect(()=>validatePaymentRecord(p,investmentRecord,[oldData.records[0]])).not.toThrow();
+  });
+  it('archives and restores plan metadata without changing schedule or payment history',()=>{
+    const p=plan({startDate:'2026-01-01',endDate:'2026-03-01'});
+    const archived=archivePlan(p,'2026-02-01T12:00:00.000Z');
+    const payment:PaymentRecord={id:'kept-payment',planId:p.id,installmentDate:'2026-01-01',installmentId:installmentIdFor(p.id,'2026-01-01'),paymentDate:'2026-01-02',amountPaise:5000,method:'Bank transfer',reference:'ref-42',notes:'retain'};
+    expect(isPlanArchived(archived)).toBe(true);
+    expect(scheduleForPlan(archived,[payment],'2026-02-02')).toEqual(scheduleForPlan(p,[payment],'2026-02-02'));
+    const restored=restorePlan(archived);
+    expect(restored).toEqual(p);
+    expect(isPlanArchived(restored)).toBe(false);
+    expect(payment).toMatchObject({installmentId:installmentIdFor(p.id,'2026-01-01'),method:'Bank transfer',reference:'ref-42',notes:'retain'});
+    const data:PaymentTrackerData={plans:[archived],records:[payment],categories:[...PAYMENT_CATEGORIES],preferences:{}};
+    const backup=parsePaymentBackup({format:PAYMENT_BACKUP_FORMAT,version:1,exportedAt:'2026-02-02T00:00:00.000Z',data});
+    expect(backup.plans[0].archivedAt).toBe(archived.archivedAt);
+    expect(backup.records).toEqual([payment]);
+  });
+  it('permits permanent deletion only when there is no payment history',()=>{
+    const first=plan(),second=plan({id:'plan-2',name:'Another plan'});
+    const payment:PaymentRecord={id:'history',planId:first.id,paymentDate:'2026-01-01',amountPaise:1000};
+    expect(()=>deletePlanWithoutPayments(first.id,[first,second],[payment])).toThrow(/must be archived/i);
+    expect(deletePlanWithoutPayments(second.id,[first,second],[payment])).toEqual([first]);
+    expect(payment.planId).toBe(first.id);
+  });
+  it('shows archived plans separately and offers restore without payment actions',()=>{
+    const archived=archivePlan(plan({startDate:'2026-01-01',endDate:'2026-02-01'}),'2026-02-02T00:00:00.000Z');
+    const payment:PaymentRecord={id:'archived-payment',planId:archived.id,installmentDate:'2026-01-01',installmentId:installmentIdFor(archived.id,'2026-01-01'),paymentDate:'2026-01-02',amountPaise:10000,method:'Card'};
+    const html=renderWithStoredPlans('plans',[archived],[payment]);
+    expect(html).toContain('Archived Plans');
+    expect(html).toContain('history retained');
+    expect(html).toContain('Restore');
+    const details=renderWithStoredPlans(`detail-${archived.id}`,[archived],[payment]);
+    expect(details).toContain('This plan is archived');
+    expect(details).toContain('Restore plan');
+    expect(details).not.toContain('Record payment');
+    expect(details).not.toContain('Delete plan');
+    expect(details).toContain('Card');
   });
   it('validates plan edits without changing existing transaction records',()=>{
     const current=plan({startDate:'2026-01-01',endDate:'2026-03-01'});
@@ -105,6 +174,6 @@ describe('Payment Tracker data and schedules',()=>{
     const data:PaymentTrackerData={plans:[p],records:[{id:'payment-1',planId:p.id,paymentDate:'2026-01-02',amountPaise:5000}],categories:[...PAYMENT_CATEGORIES],preferences:{}};
     const restored=parsePaymentBackup({format:PAYMENT_BACKUP_FORMAT,version:1,exportedAt:'2026-01-03T00:00:00.000Z',data});
     expect(restored).toEqual(data);
-    expect(scheduleForPlan(p,restored.records,'2026-01-03')[0]).toMatchObject({paidPaise:5000,status:'overdue'});
+    expect(scheduleForPlan(p,restored.records,'2026-01-03')[0]).toMatchObject({paidPaise:0,status:'overdue'});
   });
 });
